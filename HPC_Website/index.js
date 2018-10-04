@@ -44,6 +44,7 @@ var options = {
 //Count all jobs and group them by job_state to show total on tab badge
 app.post('/count', user.isAuthenticated, (req, res)=>{
   //Set the path to the API URL to get the information from
+  //The get request data is all in lower case
   options.path = `/users/${req.session.user}/jobs/count?fromdate=${req.body.fromDate}&todate=${req.body.toDate}`;
   //Use the request.js to make the reset and retrieve the code
   api.getJSON(options, (statuscode, result) => {
@@ -53,7 +54,6 @@ app.post('/count', user.isAuthenticated, (req, res)=>{
 });
 
 app.post('/jobs', user.isAuthenticated, (req, res)=>{
-  //The get request data is all in lower case
   options.path = `/users/${req.session.user}/jobs?fromdate=${req.body.fromDate}&todate=${req.body.toDate}&limit=${req.body.limit}&offset=${req.body.offset}&job_state=${req.body.job_state}`;
   api.getJSON(options, (statuscode, result) => {
     res.status(statuscode).json(result);
@@ -61,7 +61,6 @@ app.post('/jobs', user.isAuthenticated, (req, res)=>{
 });
 
 app.post('/jobinfo', user.isAuthenticated, (req, res)=>{
-  //The get request data is all in lower case
   options.path = `/jobs/${req.body.jobid}`;
   api.getJSON(options, (statuscode, result) => {
     res.status(statuscode).json(result);
@@ -69,7 +68,6 @@ app.post('/jobinfo', user.isAuthenticated, (req, res)=>{
 });
 
 app.post('/jobinfo/extra', user.isAuthenticated, (req, res)=>{
-  //The get request data is all in lower case
   options.path = `/jobs/${req.body.jobid}/extra`;
   api.getJSON(options, (statuscode, result) => {
     res.status(statuscode).json(result);

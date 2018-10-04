@@ -14,13 +14,13 @@ function executeQuery(req, res, query, params) {
 
   con.connect(function(err) {
     if (err) {
-      res.status(500).json({success: false, error: err});
+      res.status(200).json({success: false, error: err});
       console.log('[Error] at mobile.js in executeQuery.connect function.');
       console.log(`[Error] ${err}`);
     }
     con.query(query, params, function (err, rows, fields) {
       if (err) {
-        res.status(500).json({success: false, error: err});
+        res.status(200).json({success: false, error: err});
         console.log('[Error] at mobile.js in executeQuery.query function.');
         console.log(`[Error] ${err}`);
       }
@@ -29,7 +29,7 @@ function executeQuery(req, res, query, params) {
         res.status(200).json({success: true, data: rows});
         console.log(`[Success] sending back rows: ${rows}`);
       } catch (e) {
-        res.status(500).json({success: false, error: e});
+        res.status(200).json({success: false, error: e});
         console.log(`[Error] sending back rows: ${e}`);
       }
 
@@ -250,7 +250,7 @@ module.exports.getBlockedJobsByUser = (req, res, next) => {
   //Otherwise get their blocked jobs
   if (typeof req.params.user == 'undefined') {
     console.log('getBlockedJobsByUser: No parameter given');
-    res.status(500).json({});
+    res.status(200).json({});
   }else{
     //If the job contains anything then get the jobs array and loop through it to get the reasons for the blocked jobs
     getBlockedJobs(req.params.user, (jobs)=> {
