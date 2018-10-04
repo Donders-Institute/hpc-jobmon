@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>Front-end v2</title>
+    <%- include includes/styles.ejs %>
+    <link rel="stylesheet" href="css/main.css">
+  </head>
+  <body>
+
+    <%- include includes/navbar.ejs %>
+
+    <div class="jumbotron">
+      <div class="container">
+
+        <div class="row">
+          <div class="col-12">
+            <h4>Filters</h4>
+            <p>Use some filters to narrow down your jobs.</p>
+          </div>
+          <div class="col-12 col-lg-6">
+            <div class="input-group mb-3">
+              <div class="input-group-prepend">
+                <label class="input-group-text" for="pageLimit">Jobs per page:</label>
+              </div>
+              <select class="custom-select" id="pageLimit">
+                <option value="10" selected="selected">10 Jobs</option>
+                <option value="25">25 Jobs</option>
+                <option value="50">50 Jobs</option>
+                <option value="100">100 Jobs</option>
+                <option value="1000">1000 Jobs (Not recommended on Mobile phones)</option>
+              </select>
+            </div>
+          </div>
+          <div class="col-12 col-lg-6">
+            <div class="input-group mb-3">
+              <div class="input-group-prepend">
+                <label class="input-group-text" for="fromDate">Jobs Between</label>
+              </div>
+              <input type="date" name="fromDate" id="fromDate" value="">
+              <div class="input-group-prepend primary">
+                <label class="input-group-text" for="toDate">and</label>
+              </div>
+              <input type="date" name="toDate" id="toDate" value="">
+            </div>
+          </div>
+          <div class="col-12 col-lg-6">
+            <div class="input-group mb-3">
+              <button type="button" name="filter" class="btn btn-primary" onClick="applyFilters();">Apply Filters</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="row">
+        <div class="col-12 col-xs-12 col-md-12 col-lg-12">
+          <div class="list-group" id="tabs" role="tablist">
+            <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center active" href="#completed" job_state="c" role="tab">Completed Jobs <span class="badge badge-primary badge-pill" id="c_count">0</span></a>
+            <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" href="#running" job_state="r" role="tab">Running Jobs <span class="badge badge-primary badge-pill" id="r_count">0</span></a>
+            <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" href="#queued" job_state="q" role="tab">Queued Jobs <span class="badge badge-primary badge-pill" id="q_count">0</span></a>
+            <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" href="#blocked" job_state="b" role="tab">Blocked Jobs <span class="badge badge-primary badge-pill" id="b_count">0</span></a>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <div class="tab-content">
+
+            <div class="tab-pane show active" id="completed" role="tabpanel">
+              <div class="row content">
+                <div class="loader"></div>
+              </div>
+              <div class="row pagination">
+                <div class="col-12">
+                  <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center flex-wrap" id="pagination-c">
+                    </ul>
+                  </nav>
+                </div>
+              </div>
+            </div>
+
+            <div class="tab-pane" id="running" role="tabpanel">
+              <div class="row content">
+                <div class="loader"></div>
+              </div>
+              <div class="row pagination">
+                <div class="col-12">
+                  <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center flex-wrap" id="pagination-r">
+                    </ul>
+                  </nav>
+                </div>
+              </div>
+            </div>
+
+            <div class="tab-pane" id="queued" role="tabpanel">
+              <div class="row content">
+                <div class="loader"></div>
+              </div>
+              <div class="row pagination">
+                <div class="col-12">
+                  <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center flex-wrap" id="pagination-q">
+                    </ul>
+                  </nav>
+                </div>
+              </div>
+            </div>
+
+            <div class="tab-pane" id="blocked" role="tabpanel">
+              <div class="row content">
+                <div class="loader"></div>
+              </div>
+              <div class="row pagination">
+                <div class="col-12">
+                  <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center flex-wrap" id="pagination-b">
+                    </ul>
+                  </nav>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+
+    <div class="modal" tabindex="-1" role="dialog">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Job: 123877632</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <h5>Used Walltime <span id="walltime"></span></h5>
+            <div class="progress" id="used_walltime_progress">
+              <div class="progress-bar" role="progressbar" style="width: 20%;" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100">20%</div>
+            </div>
+            <hr>
+            <h5>Used Memory <span id="memory"></span></h5>
+            <div class="progress" id="used_memory_progress">
+              <div class="progress-bar" role="progressbar" style="width: 80%;" aria-valuenow="80" aria-valuemin="0" aria-valuemax="100">80%</div>
+            </div>
+            <hr>
+            <div id="job_properties">
+              <h5>Exec Host: <b>mentat005.dccn.nl</b></h5>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary">More Info</button>
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <footer style="margin-top: 50px;text-align:center;">
+      <p>Copyright &copy; 2018-2019 Ramon Robben</p>
+    </footer>
+
+    <%- include includes/scripts.ejs %>
+
+    <script async src="js/dynamicLoading.js"></script>
+    <script type="text/javascript">
+      $('.page-item').on('click', ()=>{
+        console.log('Test');
+        console.log(this);
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>Login</title>
+    <%- include includes/styles.ejs %>
+    <link rel="stylesheet" href="css/login.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
+  </head>
+  <body class="text-center">
+
+    <!-- Login Screen HTML -->
+    <div class="login-page">
+      <div class="form">
+        <form class="login-form" method="POST" action="/login">
+          <img class="logo" src="/img/logo.png" alt="Donders Institute Logo">
+          <input type="text" name="username" id="username" placeholder="username" required />
+          <input type="password" name="password" placeholder="password" required />
+          <button>login</button>
+          <a href="" class="forgot" data-toggle="modal" data-target="#helpModal">What is this?</a>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal for the 'What is this page and how to login?' link -->
+    <div class="modal fade" id="helpModal" tabindex="-1" role="dialog" aria-labelledby="helpModalTitle" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Help Section</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <h4>What is this page?</h4>
+            <p>A login page to access the HPC Cluster statistics.
+            In the statistics you can see what jobs are in queue, running or blocked.</p>
+            <h4>How to login?</h4>
+            <p>Just use the same username and password you use to login to a computer.</p>
+            <br/><br/>
+            <small>Created by: Ramon Robben</small>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <%- include includes/scripts.ejs %>
+  </body>
+</html>

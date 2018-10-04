@@ -1,0 +1,88 @@
+/* General Styling */
+
+/* Cards */
+
+.card, #tabs {
+  margin-bottom: 30px;
+}
+.card-header {
+  color: white;
+  background-color: #c20a0a;
+}
+.card-body h5 {
+  margin: 0px;
+}
+
+/* Color for Statusses Spans */
+
+.running {
+  color: #ff7f00;
+}
+.queued {
+  color: #ff7e00;
+}
+.blocked {
+  color: #ff0000;
+}
+.completed {
+  color: #5df459;
+}
+
+/* List Group Styling */
+#tabs a .badge-primary {
+  background-color: #c20a0a;
+}
+
+#tabs a.active {
+  background-color: #c20a0a;
+  color: white;
+  border-color: #c20a0a;
+}
+
+#tabs a.active span {
+  background-color: white;
+  color: #c20a0a;
+}
+
+/* When screen is larger we want to display the nav horizontally (default is vertically on small screens)*/
+
+@media (min-width: 780px) {
+  #tabs {
+    flex-direction: row;
+    border-radius: 0px;
+  }
+
+  #tabs a {
+    border: 0px solid black;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+    border-top-left-radius: .25rem !important;
+    border-top-right-radius: .25rem !important;
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+    margin: 0px;
+  }
+}
+
+/* Loading */
+
+.loader {
+  border: 8px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 8px solid #c20a0a;
+  width: 50px;
+  height: 50px;
+  -webkit-animation: spin 2s linear infinite; /* Safari */
+  animation: spin 2s linear infinite;
+  margin:0px auto;
+}
+
+/* Safari */
+@-webkit-keyframes spin {
+  0% { -webkit-transform: rotate(0deg); }
+  100% { -webkit-transform: rotate(360deg); }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
