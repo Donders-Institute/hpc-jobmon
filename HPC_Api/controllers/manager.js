@@ -5,12 +5,9 @@ const path = require('path');
 const tls = require('tls')
 
 const dbconfig = require(path.join(__dirname + '/dbconfig.json'));
-console.log(`Setting up Database Connection with the Database Config file: \n ${JSON.stringify(dbconfig)}`);
 
 function executeQuery(req, res, query, params) {
   const con = mysql.createConnection(dbconfig);
-
-  console.log(`Wanting to execute: ${query} \nWith parameters: ${params}`);
 
   con.connect(function(err) {
     if (err) {
@@ -27,13 +24,11 @@ function executeQuery(req, res, query, params) {
 
       try {
         res.status(200).json({success: true, data: rows});
-        console.log(`[Success] sending back rows: ${rows}`);
       } catch (e) {
         res.status(200).json({success: false, error: e});
         console.log(`[Error] sending back rows: ${e}`);
       }
 
-      console.log('Closing MySQL connection');
       con.end();
     });
   });
@@ -118,19 +113,15 @@ module.exports.getJobExtended = (req, res, next) => {
 function checkBlockedJob(jobs, callback) {
   var lastJob = 0;
   //Connect to the host over TLS and write the first message.
-  console.log("Executing checkBlockedJob");
   var client = tls.connect({host: 'torque.dccn.nl', port: 60209}, function() {
-    console.log("checkBlockedJob: Sending command and parameters");
     lastJob = jobs.pop();
     client.write(`checkBlockedJob++++${lastJob}\n`);
-    console.log("checkBlockedJob: Command and parameters were sent");
   });
 
   //Once data has been received parse that XML data and return the job.
   //Continue doing so untill all data has been parsed and all jobs have been sent out.
   var data = '';
   client.on('data', (receivedData) => {
-    console.log("checkBlockedJob: Data received");
     if (receivedData.toString().charCodeAt(receivedData.length -1) == 7) {
       data +=  receivedData.toString().substring(0, receivedData.length - 1);
 
@@ -140,7 +131,6 @@ function checkBlockedJob(jobs, callback) {
       var count = 0;
       if (matches == null) {
         //Callback to function if no jobs are found.
-        console.log("checkBlockedJob: No jobs, Callback([])");
         callback(jobObject);
       }else{
         //If jobs are found then try to get the BlockedReason out of them
@@ -154,7 +144,6 @@ function checkBlockedJob(jobs, callback) {
           }
         });
         //Call back to function to push the job into the array so we can show it on the page.
-        console.log("checkBlockedJob: Job found. Callback(): " + jobObject);
         callback(jobObject);
       }
 
@@ -186,11 +175,8 @@ function checkBlockedJob(jobs, callback) {
 }
 function getBlockedJobs(user, callback) {
   //Connect to the host. And write the message to get all blocked jobs from a user.
-  console.log("Executing getBlockedJobs");
   var client = tls.connect({host: 'torque.dccn.nl', port: 60209}, function() {
-    console.log("getBlockedJobs: Sending command and parameters");
     client.write(`getBlockedJobsOfUser++++${user}\n`);
-    console.log("getBlockedJobs: Command and parameters were sent");
   });
 
   var data = '';
@@ -205,7 +191,6 @@ function getBlockedJobs(user, callback) {
 
       if (jobs == null) {
         //If there are no jobs then callback to function
-        console.log("getBlockedJobs: No jobs, Callback([])");
         callback(temp);
       }else{
         //If there are jobs then loop through them push them in an array and do a callback
@@ -213,7 +198,6 @@ function getBlockedJobs(user, callback) {
           var jobid = job.match(RegExp('[0-9]+','gim'))
           temp.push(jobid[0]);
         });
-        console.log("getBlockedJobs: Job found. Callback(): " + temp);
         callback(temp);
       }
 
@@ -235,7 +219,6 @@ function getBlockedJobs(user, callback) {
   });
 }
 function getBlockedJobCallback(req, res, count, array) {
-  console.log("Execute: getBlockedJobCallback");
   //Callback check if we have gotten enough items compared to the item count.
   if (count == array.length) {
     //If so return 200 and all blocked jobs with their reason
@@ -244,11 +227,9 @@ function getBlockedJobCallback(req, res, count, array) {
 }
 
 module.exports.getBlockedJobsByUser = (req, res, next) => {
-  console.log('Executing getBlockedJobsByUser');
   //If user isn't specified then don't get their blocked jobs
   //Otherwise get their blocked jobs
   if (typeof req.params.user == 'undefined') {
-    console.log('getBlockedJobsByUser: No parameter given');
     res.status(200).json({});
   }else{
     //If the job contains anything then get the jobs array and loop through it to get the reasons for the blocked jobs
@@ -261,7 +242,6 @@ module.exports.getBlockedJobsByUser = (req, res, next) => {
           getBlockedJobCallback(req, res, count, temp);
         });
       }else{
-        console.log("getBlockedJobsByUser: No jobs found for user: " + req.params.user);
         res.status(200).json({});
       }
     });

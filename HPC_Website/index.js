@@ -88,8 +88,6 @@ app.post('/jobs/blocked/count', user.isAuthenticated, (req, res)=>{
 
 //Send login information to log the user in
 app.post('/login', (req, res)=>{
-  console.log(`${req.body.username} is trying to log in.`);
-
   if (typeof req.body.username !== 'undefined') {
     //Authenticate user with Active Directory
     var ad = new ActiveDirectory(adconfig);
@@ -107,7 +105,6 @@ app.post('/login', (req, res)=>{
         res.status(200).json({success: true, data: "You will soon be redirected to the index."});
       }else{
         //Authentication Failed
-        console.log(`${req.body.username} failed to login.`);
         res.status(200).json({success: false, error: "Wrong username or password."});
       }
     });
