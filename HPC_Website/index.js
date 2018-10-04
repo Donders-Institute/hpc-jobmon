@@ -86,7 +86,7 @@ app.post('/jobs/blocked/count', user.isAuthenticated, (req, res)=>{
   });
 });
 
-//Send login information to log the user in
+//Send login information and use ActiveDirectory to check if the user can be logged in.
 app.post('/login', (req, res)=>{
   if (typeof req.body.username !== 'undefined') {
     //Authenticate user with Active Directory
