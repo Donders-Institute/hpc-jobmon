@@ -71,7 +71,7 @@ module.exports.getJobsByUser = (req, res, next) => {
 
 module.exports.countJobsByUser = (req, res, next) => {
   let params = [req.params.user];
-  let query =` SELECT count(*) as count, job_state FROM user_jobs INNER JOIN tier1 ON user_jobs.ID = tier1.ID WHERE euser = ?`;
+  let query =`SELECT count(*) as count, job_state FROM user_jobs INNER JOIN tier1 ON user_jobs.ID = tier1.ID WHERE euser = ?`;
 
   if (typeof req.query.fromdate !== 'undefined' && typeof req.query.todate !== 'undefined') {
     query += " AND insert_datetime BETWEEN ? AND ?";

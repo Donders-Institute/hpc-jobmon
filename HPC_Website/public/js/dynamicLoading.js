@@ -22,11 +22,19 @@ function getTabCounts() {
   var fromDate = $('#fromDate').val();
   var toDate = $('#toDate').val();
 
+
   $.ajax({
     type: "POST",
     url: '/count',
     data: {fromDate: fromDate, toDate: toDate},
     success: function (result) {
+      //If in a certain period there are 0 completed jobs. then it wont return that item in the array. And thus it won't get the updated value.
+      //We have to manually reset them.
+      $(`#c_count`).html(0);
+      $(`#q_count`).html(0);
+      $(`#r_count`).html(0);
+      $(`#b_count`).html(0);
+
       result.data.forEach((item)=>{
         //Add pagination for every
         let element = $(`#pagination-${item['job_state']}`);
