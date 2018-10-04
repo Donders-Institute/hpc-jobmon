@@ -19,10 +19,13 @@ function setupFilters() {
 //Get the counts for the tab badges that display how many jobs are found with that job status
 function getTabCounts() {
 
-  var fromDate = $('#fromDate').val();
-  var toDate = $('#toDate').val();
+  var fromDate = $('#fromDate').val() + "T00:00:00";
+  var toDate = $('#toDate').val() + "T23:59:59";
 
+  console.log(fromDate);
+  console.log(toDate);
 
+  //Adding 00:00:00 and 23:59:59 made the dates inclusive with beginning and end date.
   $.ajax({
     type: "POST",
     url: '/count',
