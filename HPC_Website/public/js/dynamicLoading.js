@@ -21,10 +21,6 @@ function getTabCounts() {
 
   var fromDate = $('#fromDate').val() + "T00:00:00";
   var toDate = $('#toDate').val() + "T23:59:59";
-
-  console.log(fromDate);
-  console.log(toDate);
-
   //Adding 00:00:00 and 23:59:59 made the dates inclusive with beginning and end date.
   $.ajax({
     type: "POST",
@@ -204,8 +200,8 @@ function getBlockedJobs() {
 function getJobs(offset, job_state) {
 
   var limit = $('#pageLimit').val();
-  var fromDate = $('#fromDate').val();
-  var toDate = $('#toDate').val();
+  var fromDate = $('#fromDate').val() + "T00:00:00";
+  var toDate = $('#toDate').val() + "T23:59:59";
   //Because we start at 0 but pagination starts at 1 therefore we need the -1
   var offset = (offset - 1) * limit;
   var job_state = job_state;
