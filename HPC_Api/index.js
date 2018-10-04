@@ -8,10 +8,10 @@ const port = process.env.PORT || 3000;
 app.use(bodyParser.json()); // support json encoded bodies
 app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
 app.use(compression())
-app.use(function (err, req, res) {
-  console.error(err.stack);
-  res.status(200).json({success: false, error: 'There seems to be an error. Please contact an administrator about this, API Index.js line 17'});
-});
+// app.use(function (err, req, res) {
+//   console.error(err.stack);
+//   res.status(200).json({success: false, error: 'There seems to be an error. Please contact an administrator about this, API Index.js line 13'});
+// });
 
 
 var manager = require('./controllers/manager.js');

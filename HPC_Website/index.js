@@ -1,14 +1,15 @@
+const bodyParser = require('body-parser');
+const compression = require('compression');
 const session = require('express-session');
 const MemoryStore = require('session-memory-store')(session);
-
-const bodyParser = require('body-parser');
 const express = require('express');
 const app = express();
 const port = process.env.PORT || 80;
+const ActiveDirectory = require('activedirectory');
+const path = require('path');
 
-const compression = require('compression');
+
 app.use(compression());
-
 app.use(bodyParser.json()); // support json encoded bodies
 app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
 app.use(express.static(__dirname + '/public'));
@@ -26,6 +27,8 @@ app.use(session({
   })
 }));
 
+const adconfig = require(path.join(__dirname + '/controllers/adconfig.json'));
+
 var api = require('./controllers/request.js');
 var user = require('./controllers/authentication.js');
 
@@ -41,7 +44,7 @@ var options = {
   path: ''
 }
 
-//Count all jobs and group them by job_state to show total on tab badge
+//All Front-End Request that need to be forwarded to the API (user has to be authenticated for this)
 app.post('/count', user.isAuthenticated, (req, res)=>{
   //Set the path to the API URL to get the information from
   //The get request data is all in lower case
@@ -52,35 +55,30 @@ app.post('/count', user.isAuthenticated, (req, res)=>{
     res.status(statuscode).json(result);
   });
 });
-
 app.post('/jobs', user.isAuthenticated, (req, res)=>{
   options.path = `/users/${req.session.user}/jobs?fromdate=${req.body.fromDate}&todate=${req.body.toDate}&limit=${req.body.limit}&offset=${req.body.offset}&job_state=${req.body.job_state}`;
   api.getJSON(options, (statuscode, result) => {
     res.status(statuscode).json(result);
   });
 });
-
 app.post('/jobinfo', user.isAuthenticated, (req, res)=>{
   options.path = `/jobs/${req.body.jobid}`;
   api.getJSON(options, (statuscode, result) => {
     res.status(statuscode).json(result);
   });
 });
-
 app.post('/jobinfo/extra', user.isAuthenticated, (req, res)=>{
   options.path = `/jobs/${req.body.jobid}/extra`;
   api.getJSON(options, (statuscode, result) => {
     res.status(statuscode).json(result);
   });
 });
-
 app.post('/jobs/blocked', user.isAuthenticated, (req, res)=>{
   options.path = `/users/${req.session.user}/jobs/blocked`;
   api.getJSON(options, (statuscode, result) => {
     res.status(statuscode).json(result);
   });
 });
-
 app.post('/jobs/blocked/count', user.isAuthenticated, (req, res)=>{
   options.path = `/users/${req.session.user}/jobs/blocked/count`;
   api.getJSON(options, (statuscode, result) => {
@@ -88,23 +86,42 @@ app.post('/jobs/blocked/count', user.isAuthenticated, (req, res)=>{
   });
 });
 
-//send login form.
+//Send login information to log the user in
 app.post('/login', (req, res)=>{
+  console.log(`${req.body.username} is trying to log in.`);
+
   if (typeof req.body.username !== 'undefined') {
-    req.session.user = req.body.username;
-    req.session.authenticated = true;
-    res.redirect('/');
+    //Authenticate user with Active Directory
+    var ad = new ActiveDirectory(adconfig);
+    //Add dccn.nl to the name
+    ad.authenticate(req.body.username + "@dccn.nl", req.body.password, function(err, auth) {
+      if (err) {
+        console.log('ERROR: '+JSON.stringify(err));
+        res.status(200).json({success: false, error: "Wrong username or password."});
+        return;
+      }
+      if (auth) {
+        //Authentication Success
+        req.session.user = req.body.username;
+        req.session.authenticated = true;
+        res.status(200).json({success: true, data: "You will soon be redirected to the index."});
+      }else{
+        //Authentication Failed
+        console.log(`${req.body.username} failed to login.`);
+        res.status(200).json({success: false, error: "Wrong username or password."});
+      }
+    });
   }else{
-    res.render('login');
+    res.status(200).json({success: false, error: "Something else went wrong please try again later. Let an administrator know about this issue if it happens often."});
   }
 });
 
 app.get('/login', (req, res)=>{
   //temporary for testing so that I don't have to log in every time.
-  req.session.user = 'sopara';
-  req.session.authenticated = true;
-  res.redirect('/');
-  // res.render('login');
+  // req.session.user = 'sopara';
+  // req.session.authenticated = true;
+  // res.redirect('/');
+  res.render('login');
 });
 app.get('/logout', user.logout);
 

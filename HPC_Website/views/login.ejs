@@ -12,11 +12,12 @@
     <!-- Login Screen HTML -->
     <div class="login-page">
       <div class="form">
-        <form class="login-form" method="POST" action="/login">
+        <form class="login-form">
           <img class="logo" src="/img/logo.png" alt="Donders Institute Logo">
+          <div id="errormsg"></div>
           <input type="text" name="username" id="username" placeholder="username" required />
-          <input type="password" name="password" placeholder="password" required />
-          <button>login</button>
+          <input type="password" name="password" id="password" placeholder="password" required />
+          <button id="submit">login</button>
           <a href="" class="forgot" data-toggle="modal" data-target="#helpModal">What is this?</a>
         </form>
       </div>
@@ -49,5 +50,45 @@
     </div>
 
     <%- include includes/scripts.ejs %>
+    <script type="text/javascript">
+      $('#submit').on('click', (event)=>{
+        event.preventDefault();
+        console.log(`Login username: ${$('#username').val()}`);
+        $.ajax({
+          type: "POST",
+          url: '/login',
+          data: {username: $('#username').val(), password: $('#password').val()},
+          success: function (result) {
+            console.log(result);
+            if (result.success) {
+              $('#errormsg').append(`
+                <div class="alert alert-success alert-dismissible fade show">
+                <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                <strong>Success!</strong> ${result.data}
+                </div>
+              `);
+              window.location.replace("/");
+            }else{
+              $('#errormsg').append(`
+                <div class="alert alert-danger alert-dismissible fade show">
+                <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                <strong>Error!</strong> ${result.error}
+                </div>
+              `);
+            }
+          },
+          error: function() {
+            console.log('error');
+            $('#errormsg').append(`
+              <div class="alert alert-danger alert-dismissible fade show">
+                <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                <strong>Error!</strong> ${result.error}
+              </div>
+            `);
+          }
+        });
+      });
+    </script>
+
   </body>
 </html>

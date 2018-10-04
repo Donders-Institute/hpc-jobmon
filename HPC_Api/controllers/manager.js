@@ -39,7 +39,6 @@ function executeQuery(req, res, query, params) {
   });
 }
 
-
 module.exports.getJobsByUser = (req, res, next) => {
   //Prepare some default query and parameter.
   let params = [req.params.user];

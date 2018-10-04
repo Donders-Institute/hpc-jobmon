@@ -1,3 +1,4 @@
 HPC_Api/node_modules/
-HPC_Website/node_modules/
 HPC_Api/controllers/dbconfig.json
+HPC_Website/node_modules/
+HPC_Website/controllers/adconfig.json
