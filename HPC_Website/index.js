@@ -33,8 +33,8 @@ var user = require('./controllers/authentication.js');
 
 //Get information from API to serve to client
 var options = {
-  host: process.env.APIHOST,
-  port: process.env.APIPORT,
+  host: process.env.APIHOST || 'localhost',
+  port: process.env.APIPORT || 3000,
   method: 'GET',
   path: ''
 }
