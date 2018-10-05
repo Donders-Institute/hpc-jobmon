@@ -4,7 +4,7 @@ const session = require('express-session');
 const MemoryStore = require('session-memory-store')(session);
 const express = require('express');
 const app = express();
-const port = process.env.PORT || 80;
+const port = 80;
 const ActiveDirectory = require('activedirectory');
 const path = require('path');
 

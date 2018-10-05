@@ -2,7 +2,7 @@ const express = require('express');
 const compression = require('compression');
 const app = express();
 const bodyParser = require('body-parser');
-const port = process.env.PORT || 80 || 3000;
+const port = 3000;
 
 
 app.use(bodyParser.json()); // support json encoded bodies
