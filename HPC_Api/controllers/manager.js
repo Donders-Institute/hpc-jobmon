@@ -33,6 +33,124 @@ function executeQuery(req, res, query, params) {
     });
   });
 }
+// Very difficult getting Blocked Jobs
+function checkBlockedJob(jobs, callback) {
+  var lastJob = 0;
+  //Connect to the host over TLS and write the first message.
+  var client = tls.connect({host: 'torque.dccn.nl', port: 60209}, function() {
+    lastJob = jobs.pop();
+    client.write(`checkBlockedJob++++${lastJob}\n`);
+  });
+
+  //Once data has been received parse that XML data and return the job.
+  //Continue doing so untill all data has been parsed and all jobs have been sent out.
+  var data = '';
+  client.on('data', (receivedData) => {
+    if (receivedData.toString().charCodeAt(receivedData.length -1) == 7) {
+      data +=  receivedData.toString().substring(0, receivedData.length - 1);
+
+      var matches = data.toString().match(RegExp('<Data>([^]*?)<\/Data>','gim'));
+
+      var jobObject = {};
+      var count = 0;
+      if (matches == null) {
+        //Callback to function if no jobs are found.
+        callback(jobObject);
+      }else{
+        //If jobs are found then try to get the BlockedReason out of them
+        matches.forEach((item)=> {
+          var result = RegExp('BlockReason="([^"]*)"','gim').exec(item.toString());
+          //If there is no BlockedReason then it is a standard batchHold and we shouldn't do anything.
+          if (result == null) {
+            jobObject = {id: lastJob, reason: "Unknown Reason"};
+          }else{
+            jobObject = {id: lastJob, reason: result[1]};
+          }
+        });
+        //Call back to function to push the job into the array so we can show it on the page.
+        callback(jobObject);
+      }
+
+      //Check if there are more jobs to request the data from.
+      //If so then write the new message, If not then close the connection.
+      if (jobs.length > 0) {
+        lastJob = jobs.pop();
+        client.write(`checkBlockedJob++++${lastJob}\n`);
+      }else{
+        client.write('bye\n');
+        client.destroy();
+      }
+
+    }else{
+      data += receivedData;
+    }
+  });
+
+  //connection was closed by the server
+  client.on('close', () => {
+    console.log('Connection to torque.dccn.nl:60209 has been closed');
+  });
+
+  //Connection was abruptly closed by the server
+  client.on('error', (err) => {
+    console.log("Data from torque.dccn.nl:60209 was NOT delivered. Error: " + err)
+    return false
+  });
+}
+
+function getBlockedJobs(user, callback) {
+  //Connect to the host. And write the message to get all blocked jobs from a user.
+  var client = tls.connect({host: 'torque.dccn.nl', port: 60209}, function() {
+    client.write(`getBlockedJobsOfUser++++${user}\n`);
+  });
+
+  var data = '';
+  client.on('data', (receivedData) => {
+    //Check if this data is the last piece of data that we'll get. ASCII 7 means end of data.
+    if (receivedData.toString().charCodeAt(receivedData.length -1) == 7) {
+      data +=  receivedData.toString().substring(0, receivedData.length - 1);
+      //get the job ID
+      var jobs = data.toString().match(RegExp('JobID="([0-9]+?)"','gim'));
+      var temp = []
+
+      if (jobs == null) {
+        //If there are no jobs then callback to function
+        callback(temp);
+      }else{
+        //If there are jobs then loop through them push them in an array and do a callback
+        jobs.forEach((job)=>{
+          var jobid = job.match(RegExp('[0-9]+','gim'))
+          temp.push(jobid[0]);
+        });
+        callback(temp);
+      }
+
+      //If we're done close connection
+      client.write('bye\n');
+      client.destroy();
+    }else{
+      data += receivedData;
+    }
+  });
+
+  client.on('close', () => {
+    console.log("getBlockedJobs: TCP Connection to TCP service was closed");
+  });
+
+  client.on('error', (err) => {
+    console.log("getBlockedJobs: Error: " + err);
+    return false
+  });
+}
+
+function getBlockedJobCallback(req, res, count, array) {
+  //Callback check if we have gotten enough items compared to the item count.
+  if (count == array.length) {
+    //If so return 200 and all blocked jobs with their reason
+    res.status(200).json({success: true, data: array});
+  }
+}
+
 
 module.exports.getJobsByUser = (req, res, next) => {
   //Prepare some default query and parameter.
@@ -107,122 +225,6 @@ module.exports.getJobExtended = (req, res, next) => {
 
   //Execute query and once we have the
   executeQuery(req, res, query, params, next);
-}
-
-// Very difficult getting Blocked Jobs
-function checkBlockedJob(jobs, callback) {
-  var lastJob = 0;
-  //Connect to the host over TLS and write the first message.
-  var client = tls.connect({host: 'torque.dccn.nl', port: 60209}, function() {
-    lastJob = jobs.pop();
-    client.write(`checkBlockedJob++++${lastJob}\n`);
-  });
-
-  //Once data has been received parse that XML data and return the job.
-  //Continue doing so untill all data has been parsed and all jobs have been sent out.
-  var data = '';
-  client.on('data', (receivedData) => {
-    if (receivedData.toString().charCodeAt(receivedData.length -1) == 7) {
-      data +=  receivedData.toString().substring(0, receivedData.length - 1);
-
-      var matches = data.toString().match(RegExp('<Data>([^]*?)<\/Data>','gim'));
-
-      var jobObject = {};
-      var count = 0;
-      if (matches == null) {
-        //Callback to function if no jobs are found.
-        callback(jobObject);
-      }else{
-        //If jobs are found then try to get the BlockedReason out of them
-        matches.forEach((item)=> {
-          var result = RegExp('BlockReason="([^"]*)"','gim').exec(item.toString());
-          //If there is no BlockedReason then it is a standard batchHold and we shouldn't do anything.
-          if (result == null) {
-            jobObject = {id: lastJob, reason: "Unknown Reason"};
-          }else{
-            jobObject = {id: lastJob, reason: result[1]};
-          }
-        });
-        //Call back to function to push the job into the array so we can show it on the page.
-        callback(jobObject);
-      }
-
-      //Check if there are more jobs to request the data from.
-      //If so then write the new message, If not then close the connection.
-      if (jobs.length > 0) {
-        lastJob = jobs.pop();
-        client.write(`checkBlockedJob++++${lastJob}\n`);
-      }else{
-        client.write('bye\n');
-        client.destroy();
-      }
-
-    }else{
-      data += receivedData;
-    }
-  });
-
-  //connection was closed by the server
-  client.on('close', () => {
-    console.log('Connection to torque.dccn.nl:60209 has been closed');
-  });
-
-  //Connection was abruptly closed by the server
-  client.on('error', (err) => {
-    console.log("Data from torque.dccn.nl:60209 was NOT delivered. Error: " + err)
-    return false
-  });
-}
-function getBlockedJobs(user, callback) {
-  //Connect to the host. And write the message to get all blocked jobs from a user.
-  var client = tls.connect({host: 'torque.dccn.nl', port: 60209}, function() {
-    client.write(`getBlockedJobsOfUser++++${user}\n`);
-  });
-
-  var data = '';
-  client.on('data', (receivedData) => {
-    //Check if this data is the last piece of data that we'll get. ASCII 7 means end of data.
-    if (receivedData.toString().charCodeAt(receivedData.length -1) == 7) {
-      data +=  receivedData.toString().substring(0, receivedData.length - 1);
-      //get the job ID
-      var jobs = data.toString().match(RegExp('JobID="([0-9]+?)"','gim'));
-      var temp = []
-
-      if (jobs == null) {
-        //If there are no jobs then callback to function
-        callback(temp);
-      }else{
-        //If there are jobs then loop through them push them in an array and do a callback
-        jobs.forEach((job)=>{
-          var jobid = job.match(RegExp('[0-9]+','gim'))
-          temp.push(jobid[0]);
-        });
-        callback(temp);
-      }
-
-      //If we're done close connection
-      client.write('bye\n');
-      client.destroy();
-    }else{
-      data += receivedData;
-    }
-  });
-
-  client.on('close', () => {
-    console.log("getBlockedJobs: TCP Connection to TCP service was closed");
-  });
-
-  client.on('error', (err) => {
-    console.log("getBlockedJobs: Error: " + err);
-    return false
-  });
-}
-function getBlockedJobCallback(req, res, count, array) {
-  //Callback check if we have gotten enough items compared to the item count.
-  if (count == array.length) {
-    //If so return 200 and all blocked jobs with their reason
-    res.status(200).json({success: true, data: array});
-  }
 }
 
 module.exports.getBlockedJobsByUser = (req, res, next) => {
