@@ -14,7 +14,6 @@ app.use(bodyParser.json()); // support json encoded bodies
 app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
 app.use(express.static(__dirname + '/public'));
 app.set('view engine', 'ejs');
-
 //Use session to keep track of logged in user. And to use username for the requests
 app.use(session({
   name: 'session',
@@ -31,10 +30,6 @@ const adconfig = require(path.join(__dirname + '/controllers/adconfig.json'));
 
 var api = require('./controllers/request.js');
 var user = require('./controllers/authentication.js');
-
-app.get('/', user.isAuthenticated, (req, res)=>{
-  res.render('index');
-});
 
 //Get information from API to serve to client
 var options = {
@@ -87,6 +82,10 @@ app.post('/jobs/blocked/count', user.isAuthenticated, (req, res)=>{
 });
 
 //Send login information and use ActiveDirectory to check if the user can be logged in.
+app.get('/', user.isAuthenticated, (req, res)=>{
+  res.render('index');
+});
+
 app.post('/login', (req, res)=>{
   if (typeof req.body.username !== 'undefined') {
     //Authenticate user with Active Directory
@@ -134,6 +133,7 @@ app.get('/login', (req, res)=>{
   // res.redirect('/');
   res.render('login');
 });
+
 app.get('/logout', user.logout);
 
 app.listen(port, ()=>{
