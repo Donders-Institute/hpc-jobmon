@@ -2,7 +2,7 @@ const express = require('express');
 const compression = require('compression');
 const app = express();
 const bodyParser = require('body-parser');
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 80 || 3000;
 
 
 app.use(bodyParser.json()); // support json encoded bodies
@@ -12,7 +12,6 @@ app.use(compression())
 //   console.error(err.stack);
 //   res.status(200).json({success: false, error: 'There seems to be an error. Please contact an administrator about this, API Index.js line 13'});
 // });
-
 
 var manager = require('./controllers/manager.js');
 

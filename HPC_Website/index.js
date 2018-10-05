@@ -38,8 +38,8 @@ app.get('/', user.isAuthenticated, (req, res)=>{
 
 //Get information from API to serve to client
 var options = {
-  host: 'localhost',
-  port: '3000',
+  host: process.env.APIHOST,
+  port: process.env.APIPORT,
   method: 'GET',
   path: ''
 }
