@@ -91,23 +91,37 @@ app.post('/login', (req, res)=>{
   if (typeof req.body.username !== 'undefined') {
     //Authenticate user with Active Directory
     var ad = new ActiveDirectory(adconfig);
-    //Add dccn.nl to the name
-    ad.authenticate(req.body.username + "@dccn.nl", req.body.password, function(err, auth) {
+    //Check wether user exists. And if it exists get the userPrincipalName and use that to authenticate
+    ad.findUser(req.body.username, function(err, user) {
       if (err) {
-        console.log('ERROR: '+JSON.stringify(err));
-        res.status(200).json({success: false, error: "Wrong username or password."});
+        console.log('ERROR: ' +JSON.stringify(err));
+        res.status(200).json({success: false, error: "Something went wrong. Try again later."});
         return;
       }
-      if (auth) {
-        //Authentication Success
-        req.session.user = req.body.username;
-        req.session.authenticated = true;
-        res.status(200).json({success: true, data: "You will soon be redirected to the index."});
+      if (!user) {
+        res.status(200).json({success: false, error: "Username not found."});
       }else{
-        //Authentication Failed
-        res.status(200).json({success: false, error: "Wrong username or password."});
+        ad.authenticate(user.userPrincipalName, req.body.password, function(err, auth) {
+          if (auth) {
+            //Authentication Success
+            req.session.user = req.body.username;
+            req.session.authenticated = true;
+            res.status(200).json({success: true, data: "You will soon be redirected to the index."});
+            return;
+          }else{
+            //Authentication Failed
+            res.status(200).json({success: false, error: "Wrong username or password."});
+            return;
+          }
+
+          if (err) {
+            res.status(200).json({success: false, error: "Wrong username or password."});
+            return;
+          }
+        });
       }
     });
+
   }else{
     res.status(200).json({success: false, error: "Something else went wrong please try again later. Let an administrator know about this issue if it happens often."});
   }
@@ -115,10 +129,10 @@ app.post('/login', (req, res)=>{
 
 app.get('/login', (req, res)=>{
   //temporary for testing so that I don't have to log in every time.
-  req.session.user = 'sopara';
-  req.session.authenticated = true;
-  res.redirect('/');
-  // res.render('login');
+  // req.session.user = 'sopara';
+  // req.session.authenticated = true;
+  // res.redirect('/');
+  res.render('login');
 });
 app.get('/logout', user.logout);
 
