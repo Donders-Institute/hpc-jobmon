@@ -181,7 +181,6 @@ function getBlockedJobs(user, callback) {
 
   var data = '';
   client.on('data', (receivedData) => {
-    console.log("getBlockedJobs: Data received");
     //Check if this data is the last piece of data that we'll get. ASCII 7 means end of data.
     if (receivedData.toString().charCodeAt(receivedData.length -1) == 7) {
       data +=  receivedData.toString().substring(0, receivedData.length - 1);
