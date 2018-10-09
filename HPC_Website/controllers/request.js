@@ -21,17 +21,17 @@ exports.getJSON = function(options, onResult)
         res.on('end', ()=>{
             var obj = JSON.parse(output);
             onResult(res.statusCode, obj);
+            req.end();
         });
 
         res.on('error', ()=>{
           res.send('error: ' + err.message);
+          req.end();
         });
-
     });
 
     req.on('error', (err)=>{
         console.log(err);
+        req.end();
     });
-
-    req.end();
 };

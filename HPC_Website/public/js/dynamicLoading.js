@@ -219,6 +219,7 @@ function getJobs(offset, job_state) {
   });
 }
 
+
 function loadJobs(result, job_state) {
 
   var fullJobState = 'completed';

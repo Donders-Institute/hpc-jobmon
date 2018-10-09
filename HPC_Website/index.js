@@ -7,6 +7,7 @@ const app = express();
 const port = 80;
 const ActiveDirectory = require('activedirectory');
 const path = require('path');
+const fs = require('fs');
 
 
 app.use(compression());
@@ -27,6 +28,10 @@ app.use(session({
 }));
 
 const adconfig = require(path.join(__dirname + '/controllers/adconfig.json'));
+const tlsOptions = {
+  ca: [ fs.readFileSync(path.join(__dirname + '/controllers/ldapscert.crt'))]
+}
+adconfig.tlsOptions = tlsOptions;
 
 var api = require('./controllers/request.js');
 var user = require('./controllers/authentication.js');
@@ -45,6 +50,7 @@ app.post('/count', user.isAuthenticated, (req, res)=>{
   //The get request data is all in lower case
   options.path = `/users/${req.session.user}/jobs/count?fromdate=${req.body.fromDate}&todate=${req.body.toDate}`;
   //Use the request.js to make the reset and retrieve the code
+  console.log('sending data now');
   api.getJSON(options, (statuscode, result) => {
     //Send back the status code and the result in json.
     res.status(statuscode).json(result);
@@ -112,7 +118,6 @@ app.post('/login', (req, res)=>{
             res.status(200).json({success: false, error: "Wrong username or password."});
             return;
           }
-
           if (err) {
             res.status(200).json({success: false, error: "Wrong username or password."});
             return;
@@ -138,4 +143,5 @@ app.get('/logout', user.logout);
 
 app.listen(port, ()=>{
   console.log(`Front-End Listening on port ${port}`);
+  console.log(`Using API settings: ${options.host}:${options.port}`);
 });

@@ -12,13 +12,13 @@ function executeQuery(req, res, query, params) {
   con.connect(function(err) {
     if (err) {
       res.status(200).json({success: false, error: err});
-      console.log('[Error] at mobile.js in executeQuery.connect function.');
+      console.log('[Error] at manager.js in executeQuery.connect function.');
       console.log(`[Error] ${err}`);
     }
     con.query(query, params, function (err, rows, fields) {
       if (err) {
         res.status(200).json({success: false, error: err});
-        console.log('[Error] at mobile.js in executeQuery.query function.');
+        console.log('[Error] at manager.js in executeQuery.query function.');
         console.log(`[Error] ${err}`);
       }
 
@@ -188,6 +188,9 @@ module.exports.getJobsByUser = (req, res, next) => {
 }
 
 module.exports.countJobsByUser = (req, res, next) => {
+
+  console.log(`Counting jobs for user: ${req.params.user}`);
+
   let params = [req.params.user];
   let query =`SELECT count(*) as count, job_state FROM user_jobs INNER JOIN tier1 ON user_jobs.ID = tier1.ID WHERE euser = ?`;
 
