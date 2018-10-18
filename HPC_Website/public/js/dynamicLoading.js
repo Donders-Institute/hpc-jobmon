@@ -46,7 +46,12 @@ function getTabCounts() {
       });
     },
     error: function() {
-      console.log('error');
+      $('#completed .content').html('');
+      $('#running .content').html('');
+      $('#blocked .content').html('');
+      $('#queued .content').html('');
+      alert(`[getTabCounts] We couldnt coun't your jobs. It may be possible you don't have any yet or that our systems aren't refreshed yet.`);
+      console.log(`[getTabCounts] No data was found and we couldn't count the jobs`);
     }
   });
 
@@ -57,7 +62,11 @@ function getTabCounts() {
       $(`#b_count`).html(result.data.count);
     },
     error: function() {
-      console.log('error');
+      $('#completed .content').html('');
+      $('#running .content').html('');
+      $('#blocked .content').html('');
+      $('#queued .content').html('');
+      console.log(`[getTabCounts] BlockedJobs: No blocked jobs data was found and we couldn't count the jobs`);
     }
   });
 }
@@ -214,7 +223,11 @@ function getJobs(offset, job_state) {
       loadJobs(result, job_state);
     },
     error: function() {
-      console.log('error');
+      $('#completed .content').html('');
+      $('#running .content').html('');
+      $('#blocked .content').html('');
+      $('#queued .content').html('');
+      alert('No data was found for your account.');
     }
   });
 }

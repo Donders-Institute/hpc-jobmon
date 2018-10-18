@@ -6,6 +6,7 @@ const tls = require('tls')
 
 const dbconfig = require(path.join(__dirname + '/dbconfig.json'));
 
+
 function executeQuery(req, res, query, params) {
   const con = mysql.createConnection(dbconfig);
 
@@ -14,23 +15,22 @@ function executeQuery(req, res, query, params) {
       res.status(200).json({success: false, error: err});
       console.log('[Error] at manager.js in executeQuery.connect function.');
       console.log(`[Error] ${err}`);
+    }else{
+      con.query(query, params, function (err, rows, fields) {
+        if (err) {
+          res.status(200).json({success: false, error: err});
+          console.log('[Error] at manager.js in executeQuery.query function.');
+          console.log(`[Error] ${err}`);
+        }
+        try {
+          res.status(200).json({success: true, data: rows});
+        } catch (e) {
+          res.status(200).json({success: false, error: e});
+          console.log(`[Error] sending back rows: ${e}`);
+        }
+        con.end();
+      });
     }
-    con.query(query, params, function (err, rows, fields) {
-      if (err) {
-        res.status(200).json({success: false, error: err});
-        console.log('[Error] at manager.js in executeQuery.query function.');
-        console.log(`[Error] ${err}`);
-      }
-
-      try {
-        res.status(200).json({success: true, data: rows});
-      } catch (e) {
-        res.status(200).json({success: false, error: e});
-        console.log(`[Error] sending back rows: ${e}`);
-      }
-
-      con.end();
-    });
   });
 }
 // Very difficult getting Blocked Jobs
@@ -256,4 +256,46 @@ module.exports.countBlockedJobsByUser = (req, res, next) => {
   getBlockedJobs(req.params.user, (jobs)=> {
     res.status(200).json({success: true, data: {count: jobs.length}});
   });
+}
+
+// For the the statistics
+module.exports.getData = (req, res, next) => {
+  let params = [];
+  let query = `
+  SELECT
+  user_jobs.insert_datetime, user_jobs.euser,
+  tier1.job_state,
+  tier2.r_mem, tier2.used_mem, tier2.used_cput,
+  tier3.egroup
+  FROM user_jobs, tier1, tier2, tier3
+  WHERE tier1.ID = user_jobs.ID AND tier2.ID = user_jobs.ID AND tier3.ID = user_jobs.ID
+  `;
+
+  if (typeof req.query.fromdate !== 'undefined' && typeof req.query.todate !== 'undefined') {
+    query += " AND insert_datetime >= ? AND insert_datetime <= ?";
+    params.push(req.query.fromdate);
+    params.push(req.query.todate);
+  }else{
+    var fromDate = new Date();
+    fromDate.setDate(1);
+    fromDate.setMonth(fromDate.getMonth()-1);
+
+    var toDate = new Date();
+    toDate.setDate(1);
+    toDate.setMonth(toDate.getMonth()+1);
+
+    query += " AND insert_datetime >= ? AND insert_datetime <= ?";
+    params.push(fromDate);
+    params.push(toDate);
+  }
+
+  if (typeof req.query.jobstate !== 'undefined' && req.query.jobstate != '') {
+    params.push(req.query.jobstate);
+    query += " AND tier1.job_state = ?"
+  }
+
+  //query+= " LIMIT 100";
+
+  executeQuery(req, res, query, params);
+
 }

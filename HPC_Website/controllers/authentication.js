@@ -1,7 +1,11 @@
 module.exports.isAuthenticated = (req, res, next) => {
   if (req.session && typeof req.session.user !== 'undefined' && typeof req.session.authenticated !== 'undefined') {
     if (req.session.authenticated == true) {
-      next();
+      if (typeof req.session.isAdmin !== 'indefined' && req.session.isAdmin) {
+        res.render('stats');
+      }else{
+        next();
+      }
     }else{
       res.redirect('/login');
     }

@@ -8,6 +8,7 @@ var https = require("https");
  */
 exports.getJSON = function(options, onResult)
 {
+    console.log(`Options: ${options}`);
     var port = options.port == 443 ? https : http;
     var req = port.request(options, function(res)
     {
@@ -15,13 +16,13 @@ exports.getJSON = function(options, onResult)
         res.setEncoding('utf8');
 
         res.on('data', (chunk)=>{
-            output += chunk;
+          output += chunk;
         });
 
         res.on('end', ()=>{
-            var obj = JSON.parse(output);
-            onResult(res.statusCode, obj);
-            req.end();
+          var obj = JSON.parse(output);
+          onResult(res.statusCode, obj);
+          req.end();
         });
 
         res.on('error', ()=>{
@@ -34,4 +35,5 @@ exports.getJSON = function(options, onResult)
         console.log(err);
         req.end();
     });
+    
 };

@@ -50,7 +50,6 @@ app.post('/count', user.isAuthenticated, (req, res)=>{
   //The get request data is all in lower case
   options.path = `/users/${req.session.user}/jobs/count?fromdate=${req.body.fromDate}&todate=${req.body.toDate}`;
   //Use the request.js to make the reset and retrieve the code
-  console.log('sending data now');
   api.getJSON(options, (statuscode, result) => {
     //Send back the status code and the result in json.
     res.status(statuscode).json(result);
@@ -111,6 +110,12 @@ app.post('/login', (req, res)=>{
             //Authentication Success
             req.session.user = req.body.username;
             req.session.authenticated = true;
+
+            if (req.body.username.endsWith("_admin")) {
+              req.session.isAdmin = true;
+              console.log("Admin login!");
+            }
+
             res.status(200).json({success: true, data: "You will soon be redirected to the index."});
             return;
           }else{
@@ -137,6 +142,10 @@ app.get('/login', (req, res)=>{
   // req.session.authenticated = true;
   // res.redirect('/');
   res.render('login');
+});
+
+app.get('/admin', user.isAuthenticated, (req, res) => {
+  res.render('stats');
 });
 
 app.get('/logout', user.logout);

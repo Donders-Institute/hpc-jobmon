@@ -3,11 +3,13 @@ const compression = require('compression');
 const app = express();
 const bodyParser = require('body-parser');
 const port = 3000;
+const cors = require('cors');
 
 
 app.use(bodyParser.json()); // support json encoded bodies
 app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
-app.use(compression())
+app.use(compression());
+app.use(cors());
 // app.use(function (err, req, res) {
 //   console.error(err.stack);
 //   res.status(200).json({success: false, error: 'There seems to be an error. Please contact an administrator about this, API Index.js line 13'});
@@ -15,13 +17,17 @@ app.use(compression())
 
 var manager = require('./controllers/manager.js');
 
-
 app.get('/jobs/:jobid', manager.getJobInfo);
 app.get('/jobs/:jobid/extra', manager.getJobExtended);
 app.get('/users/:user/jobs', manager.getJobsByUser);
 app.get('/users/:user/jobs/count', manager.countJobsByUser);
 app.get('/users/:user/jobs/blocked', manager.getBlockedJobsByUser);
 app.get('/users/:user/jobs/blocked/count', manager.countBlockedJobsByUser);
+
+// app.get('/stats', manager.getStats);
+// app.get('/stats/year/:year', manager.getStatsFromYear);
+
+app.get('/stats', manager.getData);
 
 
 app.on('error', function(err){
