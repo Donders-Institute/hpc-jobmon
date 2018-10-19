@@ -1,4 +1,5 @@
 let dataSetObject;
+let downloadContents;
 let userTable = [];
 //variable for realtime 
 
@@ -198,6 +199,8 @@ function getUserModalData(user) {
     used_cput = addTimes(used_cput, job.used_cput);
   });
 
+  downloadContents = newDataSet;
+
   return {name, jobs, req_mem, used_mem, used_cput};
 }
 
@@ -224,6 +227,7 @@ function setGroupModalData(group) {
   let totalUsedMemory = 0;
   let totalUsedCPUTime = 0;
   let users = [];
+  let usersJSON = [];
 
   let newDataSet = dataSetObject.data.filter(job => {
     //push all users into users array. (this will get lots of duplicates but we'll fix em afterwards)
@@ -238,8 +242,10 @@ function setGroupModalData(group) {
   users = Array.from(new Set([ ...users ]));
 
   //usersFromGroup
+  $('#usersFromGroup').html('');
   users.forEach(user => {
     let u = getUserModalData(user);
+    usersJSON.push(u);
     $('#usersFromGroup').append(`
       <tr>
         <td><a href="#" onClick="setUserModalData('${u.name}'); return false;">${u.name}</a></td>
@@ -257,6 +263,8 @@ function setGroupModalData(group) {
     totalUsedMemory += memToMB(job.used_mem);
     totalUsedCPUTime = addTimes(totalUsedCPUTime, job.used_cput);
   });
+
+  downloadContents = {...usersJSON};
 
   $('#groupStatsLabel').html(group);
   $('#groupStatsGroup').html(group);
@@ -351,4 +359,60 @@ function formatCPUseconds(totalSeconds) {
   seconds = totalSeconds % 60;
 
   return `${zeroPadded(hours)}:${zeroPadded(minutes)}:${zeroPadded(seconds)}`;
+}
+
+Object.size = function(obj) {
+  var size = 0, key;
+  for (key in obj) {
+      if (obj.hasOwnProperty(key)) size++;
+  }
+  return size;
+};
+
+function downloadCSV(obj) {
+  let csv = '';
+  let headers = [];
+
+  console.log('------- new line ----------');
+  Object.keys(obj).forEach(value => {
+    Object.keys(obj[value]).forEach(key => {
+      headers.push(key);
+    });
+  });
+
+  //clear duplicates
+  headers = Array.from(new Set([ ...headers ]));
+
+  for (var i = 0; i < headers.length; i++) {
+    if (i == headers.length - 1) {
+      csv += `${headers[i]}\n`;
+    }else{      
+      csv += `${headers[i]},`;
+    }
+  }
+
+  //transform obj to CSV then start a download.
+  let str = '';
+  for (var i in obj) {
+    for (var j in obj[i]) {
+      str += obj[i][j] + ',';
+    }
+    str = str.replace(/,\s*$/, "");
+    csv += str + '\n';
+    str = '';
+  }
+
+  var element = document.createElement('a');
+  element.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv));
+  element.setAttribute('download', 'export.csv');
+  element.style.display = 'none';
+  document.body.appendChild(element);
+  element.click();
+  document.body.removeChild(element);
+
+}
+
+function exportCSV() {
+  console.log('Download Content');
+  console.log(downloadCSV(downloadContents));
 }
