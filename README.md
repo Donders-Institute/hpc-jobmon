@@ -16,6 +16,8 @@ The HPC_Website is the website itself.
 It handles the logins and the requests that are sent to the API to get the information for a specific user.
 It also shows the user a nice interface in which they can see information about their jobs.
 
+Logging in with an Admin account will show you a different page with statistics about the usuage of the HPC.
+
 ### Understanding Infrastructure
 
 Currently there are a few services and scripts running.
