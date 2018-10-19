@@ -38,3 +38,5 @@ __The Front-End__ : The Front-End sends a nicely styled page to the client. The 
 Heres a picture I made to explain the infrastructure. It might not be 100% accurate but it will at least give you an idea of how the structure is setup.
 
 ![Image of Infrastructure](https://www.mupload.nl/img/rfxd8vxa.png)
+
+For more indepth information of the systems go to the groupshare _TG\Projects\Project HPC-Jobmon_
