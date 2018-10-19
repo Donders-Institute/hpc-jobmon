@@ -373,7 +373,6 @@ function downloadCSV(obj) {
   let csv = '';
   let headers = [];
 
-  console.log('------- new line ----------');
   Object.keys(obj).forEach(value => {
     Object.keys(obj[value]).forEach(key => {
       headers.push(key);
@@ -413,6 +412,5 @@ function downloadCSV(obj) {
 }
 
 function exportCSV() {
-  console.log('Download Content');
-  console.log(downloadCSV(downloadContents));
+  downloadCSV(downloadContents);
 }
