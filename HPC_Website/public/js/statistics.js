@@ -88,6 +88,8 @@ for (var i = 0; i < tempUsers.length; i++) {
       tempDataSet[i].score = Math.round((tempDataSet[i].used_mem / tempDataSet[i].r_mem)*100);
     }
   });
+
+  downloadContents = dataSetObject.data;
 }
 
 tempDataSet.map((data) =>{ 
@@ -156,6 +158,8 @@ function changeData(newdata) {
 
   $('#myTable').dataTable().fnClearTable();
   $('#myTable').dataTable().fnAddData(tempDataSet);
+
+  downloadContents = tempDataSet.data;
 }
 
 function applyFilters() {
