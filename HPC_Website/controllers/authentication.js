@@ -14,6 +14,14 @@ module.exports.isAuthenticated = (req, res, next) => {
   }
 }
 
+module.exports.isAdmin = (req, res, next) => {
+  if (typeof req.session.isAdmin !== 'undefined' && req.session.isAdmin) {
+    next();
+  }else{
+    res.redirect('/login');
+  }
+}
+
 module.exports.logout = (req, res, next) => {
   req.session.destroy();
   res.redirect('/login');

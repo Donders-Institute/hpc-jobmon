@@ -7,9 +7,11 @@ $(document).ready(()=>{
   $('#myTable').hide();
   setFilterDefaults();
   $.ajax({
-    type: "GET",  
-    url: `http://localhost:3000/stats?fromdate=${$('#fromDate').val()}&todate=${$('#toDate').val()}&jobstate=${$('#jobState').val()}`
+    type: "POST",  
+    url: `/getStats`,
+    data: {fromdate: $('#fromDate').val(), todate: $('#toDate').val(), jobstate: $('#jobState').val()}
   }).done((data)=>{
+    console.log(`[loadStatsPromise] Data: ${data}`);
     if (data.success && data.data.length != 0) {
       dataSetObject = data;
       console.log(`[loadStatsPromise] Success: Data found and stored`);
@@ -21,7 +23,7 @@ $(document).ready(()=>{
       console.log(`[loadStatsPromise] Warning: No data found`);
     }
   }).fail((xhr)=>{
-    console.log(`[loadStatsPromise] Error: ${xhr}`);
+    console.log(`[loadStatsPromise] Error: ${JSON.stringify(xhr)}`);
   });
 });
 
