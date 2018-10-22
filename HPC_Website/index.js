@@ -8,6 +8,7 @@ const port = 80;
 const ActiveDirectory = require('activedirectory');
 const path = require('path');
 const fs = require('fs');
+const request = require('request');
 
 
 app.use(compression());
@@ -33,7 +34,6 @@ const tlsOptions = {
 }
 adconfig.tlsOptions = tlsOptions;
 
-var api = require('./controllers/request.js');
 var user = require('./controllers/authentication.js');
 
 //Get information from API to serve to client
@@ -48,41 +48,43 @@ var options = {
 app.post('/count', user.isAuthenticated, (req, res)=>{
   //Set the path to the API URL to get the information from
   //The get request data is all in lower case
-  options.path = `/users/${req.session.user}/jobs/count?fromdate=${req.body.fromDate}&todate=${req.body.toDate}`;
+  const path = `http://${options.host}:${options.port}/users/${req.session.user}/jobs/count?fromdate=${req.body.fromDate}&todate=${req.body.toDate}`;
   //Use the request.js to make the reset and retrieve the code
-  api.getJSON(options, (statuscode, result) => {
+  request(path, { json: true }, (err, response, body) => {
     //Send back the status code and the result in json.
-    res.status(statuscode).json(result);
+    res.status(200).json(response.body);
   });
+
 });
 app.post('/jobs', user.isAuthenticated, (req, res)=>{
-  options.path = `/users/${req.session.user}/jobs?fromdate=${req.body.fromDate}&todate=${req.body.toDate}&limit=${req.body.limit}&offset=${req.body.offset}&job_state=${req.body.job_state}`;
-  api.getJSON(options, (statuscode, result) => {
-    res.status(statuscode).json(result);
+  const path = `http://${options.host}:${options.port}/users/${req.session.user}/jobs?fromdate=${req.body.fromDate}&todate=${req.body.toDate}&limit=${req.body.limit}&offset=${req.body.offset}&job_state=${req.body.job_state}`;
+  request(path, { json: true }, (err, response, body) => {
+    res.status(200).json(response.body);
   });
 });
 app.post('/jobinfo', user.isAuthenticated, (req, res)=>{
-  options.path = `/jobs/${req.body.jobid}`;
-  api.getJSON(options, (statuscode, result) => {
-    res.status(statuscode).json(result);
+  console.log('job info');
+  const path = `http://${options.host}:${options.port}/jobs/${req.body.jobid}`;
+  request(path, { json: true }, (err, response, body) => {
+    res.status(200).json(response.body);
   });
 });
 app.post('/jobinfo/extra', user.isAuthenticated, (req, res)=>{
-  options.path = `/jobs/${req.body.jobid}/extra`;
-  api.getJSON(options, (statuscode, result) => {
-    res.status(statuscode).json(result);
+  const path = `http://${options.host}:${options.port}/jobs/${req.body.jobid}/extra`;
+  request(path, { json: true }, (err, response, body) => {
+    res.status(200).json(response.body);
   });
 });
 app.post('/jobs/blocked', user.isAuthenticated, (req, res)=>{
-  options.path = `/users/${req.session.user}/jobs/blocked`;
-  api.getJSON(options, (statuscode, result) => {
-    res.status(statuscode).json(result);
+  const path = `http://${options.host}:${options.port}/users/${req.session.user}/jobs/blocked`;
+  request(path, { json: true }, (err, response, body) => {
+    res.status(200).json(response.body);
   });
 });
 app.post('/jobs/blocked/count', user.isAuthenticated, (req, res)=>{
-  options.path = `/users/${req.session.user}/jobs/blocked/count`;
-  api.getJSON(options, (statuscode, result) => {
-    res.status(statuscode).json(result);
+  const path = `http://${options.host}:${options.port}/users/${req.session.user}/jobs/blocked/count`;
+  request(path, { json: true }, (err, response, body) => {
+    res.status(200).json(response.body);
   });
 });
 
@@ -137,11 +139,11 @@ app.post('/login', (req, res)=>{
 });
 
 app.get('/login', (req, res)=>{
-  //temporary for testing so that I don't have to log in every time.
-  // req.session.user = 'sopara';
-  // req.session.authenticated = true;
-  // res.redirect('/');
-  res.render('login');
+  // temporary for testing so that I don't have to log in every time.
+  req.session.user = 'sopara';
+  req.session.authenticated = true;
+  res.redirect('/');
+  // res.render('login');
 });
 
 app.get('/admin', user.isAuthenticated, (req, res) => {

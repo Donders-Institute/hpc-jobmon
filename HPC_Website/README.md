@@ -56,11 +56,11 @@ front-end nodejs index.js: uses a middleware function to check if the user is au
 ```javascript
 //The request url was set to /jobs/blocked so here is where the information goes.
 app.post('/jobs/blocked', user.isAuthenticated, (req, res)=>{
-  options.path = `/users/${req.session.user}/jobs/blocked/count`;
-  //api.getJSON is a simple function get make a GET request and retrieve the result. (controllers/request.js)
-  api.getJSON(options, (statuscode, result) => {
-    //get status code and send data back.
-    res.status(statuscode).json(result);
+  const path = `http://${options.host}:${options.port}/users/${req.session.user}/jobs/count?fromdate=${req.body.fromDate}&todate=${req.body.toDate}`;
+  //Use the request.js to make the reset and retrieve the code
+  request(path, { json: true }, (err, response, body) => {
+    //Send back the status code and the result in json.
+    res.status(200).json(response.body);
   });
 });
 ```
