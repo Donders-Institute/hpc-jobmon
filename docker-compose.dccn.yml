@@ -2,7 +2,7 @@ version: "3.3"
 
 services:
   web-ui:
-    image: docker-registry.dccn.nl:5000/hpc-jobmon-ui:latest
+    image: docker-registry.dccn.nl:5000/hpc-jobmon-ui:1.0
     environment:
       APIHOST: web-api
       APIPORT: 3000
@@ -22,10 +22,13 @@ services:
           - node.labels.function == production
 
   web-api:
-    image: docker-registry.dccn.nl:5000/hpc-jobmon-api:latest
+    image: docker-registry.dccn.nl:5000/hpc-jobmon-api:1.0
     configs:
       - source: dbconfig.json
         target: /controllers/dbconfig.json
+    configs:
+    - source: ldapscert.crt
+      target: /controllers/ldapscert.crt
     depends_on:
       - db
     deploy:
@@ -64,3 +67,5 @@ configs:
     file: /mnt/docker/data/hpc-jobmon/dbconfig.json
   adconfig.json:
     file: /mnt/docker/data/hpc-jobmon/adconfig.json
+  ldapscert.crt:
+    file: /mnt/docker/data/hpc-jobmon/ldapscert.crt
