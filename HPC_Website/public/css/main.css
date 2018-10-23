@@ -86,3 +86,27 @@
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
+/* custom navbar collapse */
+
+@media (min-width: 350px){
+  .navbar-expand-custom {
+      flex-direction: row;
+      flex-wrap: nowrap;
+      justify-content: flex-start;
+  }
+  .navbar-expand-custom .navbar-nav {
+      flex-direction: row;
+  }
+  .navbar-expand-custom .navbar-nav .nav-link {
+      padding-right: .5rem;
+      padding-left: .5rem;
+  }
+  .navbar-expand-custom .navbar-collapse {
+      display: flex !important;
+      flex-basis: 0px;
+  }
+  .navbar-expand-custom .navbar-toggler {
+      display: none;
+  }
+}

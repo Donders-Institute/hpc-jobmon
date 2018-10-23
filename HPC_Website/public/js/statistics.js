@@ -169,8 +169,9 @@ function applyFilters() {
   $('#tableLoader').fadeIn(250);
 
   $.ajax({
-    type: "GET",  
-    url: `http://localhost:3000/stats?fromdate=${$('#fromDate').val()}&todate=${$('#toDate').val()}&jobstate=${$('#jobState').val()}`
+    type: "POST",  
+    url: `/getStats`,
+    data: {fromdate: $('#fromDate').val(), todate: $('#toDate').val(), jobstate: $('#jobState').val()}
   }).done((data)=>{
     if (data.success && data.data.length != 0) {
       dataSetObject = data;
@@ -407,16 +408,25 @@ function downloadCSV(obj) {
     str = '';
   }
 
-  var element = document.createElement('a');
-  element.setAttribute('href', 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv));
-  element.setAttribute('download', 'export.csv');
-  element.style.display = 'none';
-  document.body.appendChild(element);
-  element.click();
-  document.body.removeChild(element);
+  let blob = new Blob([csv], {type: 'text/csv'});
+  if(window.navigator.msSaveOrOpenBlob) {
+      window.navigator.msSaveBlob(blob, 'export.csv');
+  }
+  else{
+      let elem = window.document.createElement('a');
+      elem.href = window.URL.createObjectURL(blob);
+      elem.download = 'export.csv';        
+      document.body.appendChild(elem);
+      elem.click();        
+      document.body.removeChild(elem);
+  }
 
 }
 
 function exportCSV() {
   downloadCSV(downloadContents);
+}
+
+function exportAllCSV() {
+  downloadCSV(dataSetObject.data);
 }

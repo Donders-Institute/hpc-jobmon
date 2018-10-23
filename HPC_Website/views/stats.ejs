@@ -8,40 +8,10 @@
   <link rel="stylesheet" href="css/bootstrap.min.css">
   <link rel="stylesheet" href="css/dataTables.bootstrap4.min.css">
   <link rel="stylesheet" href="css/main.css">
-  <style>
-    .loader {
-      border: 8px solid #e2e2e2;
-      border-radius: 50%;
-      border-top: 8px solid #8f0100;
-      width: 50px;
-      height: 50px;
-      -webkit-animation: spin 1s linear infinite; /* Safari */
-      animation: spin 1s linear infinite;
-    }
-    /* Safari */
-    @-webkit-keyframes spin {
-      0% { -webkit-transform: rotate(0deg); }
-      100% { -webkit-transform: rotate(360deg); }
-    }
-    
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-  </style>
 </head>
 <body>
 
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container">
-      <a class="navbar-brand" href="#">HPC Statistics</a>
-        <ul class="navbar-nav ml-auto">
-          <li class="nav-item active">
-            <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
-          </li>
-        </ul>
-    </div>
-  </nav>
+  <%- include includes/navbar.ejs %>
 
   <div class="jumbotron">
     <div class="container">
@@ -87,7 +57,7 @@
         <div class="col-12 col-sm-6 col-lg-6">
           <div class="input-group mb-3">
             <div class="input-group-prepend">
-              <label class="input-group-text" for="minRequested">Requested minimum</label>
+              <label class="input-group-text" for="minRequested">Requested Mem minimum</label>
             </div>
             <input type="number" name="minRequested" id="minRequested" value="">
           </div>
@@ -106,7 +76,7 @@
       <div class="row">
         <div class="col-12">
           <button type="button" name="filter" class="btn btn-primary" onClick="applyFilters();">Apply Filters</button>
-          <button type="button" name="filter" class="btn btn-success" onClick="exportCSV();">Export CSV</button>
+          <button type="button" name="filter" class="btn btn-success" onClick="exportAllCSV();">Export CSV</button>
         </div>
       </div>
       
