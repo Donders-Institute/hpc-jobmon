@@ -27,8 +27,8 @@ services:
       - source: dbconfig.json
         target: /controllers/dbconfig.json
     configs:
-    - source: ldapscert.crt
-      target: /controllers/ldapscert.crt
+      - source: ldapscert.crt
+        target: /controllers/ldapscert.crt
     depends_on:
       - db
     deploy:
