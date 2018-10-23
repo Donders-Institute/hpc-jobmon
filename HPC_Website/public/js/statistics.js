@@ -19,8 +19,8 @@ $(document).ready(()=>{
       setUpTable();
     }else{
       fadeLoaders();
-      alert('No data was found with these filters.');
-      console.log(`[loadStatsPromise] Warning: No data found`);
+      console.log(`[loadStatsPromise] Warning: No data found. Refresh the page and try again`);
+      alert('No data was found with these filters. Refresh the page and try again');
     }
   }).fail((xhr)=>{
     console.log(`[loadStatsPromise] Error: ${JSON.stringify(xhr)}`);
@@ -176,15 +176,16 @@ function applyFilters() {
     if (data.success && data.data.length != 0) {
       dataSetObject = data;
       console.log(data);
-      console.log(`[loadStatsPromise] Success: Data found and stored`);
+      console.log(`[applyFilters] Success: Data found and stored`);
       changeData(dataSetObject);
       fadeLoaders();
     }else{
-      console.log(`[loadStatsPromise] Warning: No data found`);
-      alert('No data was found with these filters.');
+      console.log(`[applyFilters] Warning: No data found. Refresh the page and try again`);
+      alert('No data was found with these filters. Refresh the page and try again');
+      fadeLoaders();
     }
   }).fail((xhr)=>{
-    console.log(`[loadStatsPromise] Error: ${xhr}`);
+    console.log(`[applyFilters] Error: ${xhr}`);
   });
 }
 
