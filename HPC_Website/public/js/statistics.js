@@ -45,22 +45,9 @@ function setFilterDefaults() {
 $.fn.dataTable.ext.search.push(
   function(settings, data, dataIndex) {
     var min = parseInt( $('#minRequested').val(), 10 );
-    var requestedMem = parseFloat( data[1] ) || 0; // use data for the requested memory column
+    var requestedMem = parseFloat( data[2] ) || 0; // use data for the requested memory column
 
     if (isNaN(min) || isNaN(requestedMem) || requestedMem > min) {
-      return true;
-    }else{
-      return false;
-    }
-  }
-);
-
-$.fn.dataTable.ext.search.push(
-  function(settings, data, dataIndex) {
-    var min = parseInt( $('#minScore').val(), 10 );
-    var score = parseInt(data[5].replace('%', '')) || 0; // use data for the requested memory column
-
-    if (isNaN(min) || isNaN(score) || score > min) {
       return true;
     }else{
       return false;
@@ -79,15 +66,14 @@ function setUpTable() {
 
 //Make array item for each user. Loop through all users and add their information to their.
 for (var i = 0; i < tempUsers.length; i++) {
-  tempDataSet.push({euser: '', r_mem: 0, used_mem: 0, used_cput: 0, egroup: '', score: 0});
+  tempDataSet.push({euser: '', r_mem: 0, used_mem: 0, used_walltime: 0, egroup: '', score: 0});
   dataSetObject.data.forEach(data => {
     if (tempUsers[i] == data.euser) {
       tempDataSet[i].euser = data.euser;
       tempDataSet[i].r_mem += memToMB(data.r_mem);
       tempDataSet[i].used_mem += memToMB(data.used_mem);
-      tempDataSet[i].used_cput = addTimes(tempDataSet[i].used_cput, data.used_cput);
+      tempDataSet[i].used_walltime = addTimes(tempDataSet[i].used_walltime, data.used_walltime);
       tempDataSet[i].egroup = data.egroup;
-      tempDataSet[i].score = Math.round((tempDataSet[i].used_mem / tempDataSet[i].r_mem)*100);
     }
   });
 
@@ -95,23 +81,23 @@ for (var i = 0; i < tempUsers.length; i++) {
 }
 
 tempDataSet.map((data) =>{ 
-  data.r_mem = data.r_mem;
-  data.used_mem = data.used_mem ;
   data.score = data.score + ' %';
   data.euser = `<a href="#" onClick="setUserModalData('${data.euser}');return false;">${data.euser}</a>`;
   data.egroup = `<a href="#" onClick="setGroupModalData('${data.egroup}');return false;">${data.egroup}</a>`;
-  data.used_cput = getCPUseconds(data.used_cput);
+  // data.used_walltime = getCPUseconds(data.used_walltime);
 });
 
 userTable = $('#myTable').DataTable( {
   data: tempDataSet,
+  columnDefs: [
+    { type: 'time-uni', targets: 4 }
+  ],
   columns: [
+    { data: 'egroup' },
     { data: 'euser' },
     { data: 'r_mem' },
     { data: 'used_mem' },
-    { data: 'used_cput' },
-    { data: 'egroup' },
-    { data: 'score' }
+    { data: 'used_walltime' }
   ]
 });
 
@@ -136,26 +122,22 @@ function changeData(newdata) {
 
   //Make array item for each user. Loop through all users and add their information to their.
   for (var i = 0; i < tempUsers.length; i++) {
-    tempDataSet.push({euser: '', r_mem: 0, used_mem: 0, used_cput: 0, egroup: '', score: 0});
+    tempDataSet.push({euser: '', r_mem: 0, used_mem: 0, used_walltime: 0, egroup: ''});
     newdata.data.forEach(data => {
       if (tempUsers[i] == data.euser) {
         tempDataSet[i].euser = data.euser;
         tempDataSet[i].r_mem += memToMB(data.r_mem);
         tempDataSet[i].used_mem += memToMB(data.used_mem);
-        tempDataSet[i].used_cput = addTimes(tempDataSet[i].used_cput, data.used_cput);
+        tempDataSet[i].used_walltime = addTimes(tempDataSet[i].used_walltime, data.used_walltime);
         tempDataSet[i].egroup = data.egroup;
-        tempDataSet[i].score = Math.round((tempDataSet[i].used_mem / tempDataSet[i].r_mem)*100);
       }
     });
   }
 
   tempDataSet.map((data) =>{ 
-    data.r_mem = data.r_mem;
-    data.used_mem = data.used_mem ;
-    data.score = data.score + ' %';
     data.euser = `<a href="#" onClick="setUserModalData('${data.euser}');return false;">${data.euser}</a>`;
     data.egroup = `<a href="#" onClick="setGroupModalData('${data.egroup}');return false;">${data.egroup}</a>`;
-    data.used_cput = getCPUseconds(data.used_cput);
+    // data.used_walltime = getCPUseconds(data.used_walltime);
   });
 
   $('#myTable').dataTable().fnClearTable();
@@ -194,7 +176,7 @@ function getUserModalData(user) {
   let jobs = 0;
   let req_mem = 0;
   let used_mem = 0;
-  let used_cput = 0;
+  let used_walltime = 0;
 
   let newDataSet = dataSetObject.data.filter(job => {
     return job.euser == user;
@@ -204,12 +186,12 @@ function getUserModalData(user) {
   newDataSet.forEach(job => {
     req_mem += memToMB(job.r_mem);
     used_mem += memToMB(job.used_mem);
-    used_cput = addTimes(used_cput, job.used_cput);
+    used_walltime = addTimes(used_walltime, job.used_walltime);
   });
 
   downloadContents = newDataSet;
 
-  return {name, jobs, req_mem, used_mem, used_cput};
+  return {name, jobs, req_mem, used_mem, used_walltime};
 }
 
 function setUserModalData(user) {
@@ -220,7 +202,7 @@ function setUserModalData(user) {
   $('#userStatsTotalJobs').html(u.jobs);
   $('#userStatsReqMem').html(u.req_mem + ' MB');
   $('#userStatsUsedMem').html(u.used_mem + ' MB');
-  $('#userStatsCPUTime').html(u.used_cput);
+  $('#userStatsWalltime').html(u.used_walltime);
 
   $('#userStatsFrom').html($('#fromDate').val());
   $('#userStatsTo').html($('#toDate').val());
@@ -233,7 +215,7 @@ function setGroupModalData(group) {
   let totalJobs = 0;
   let totalRequestedMemory = 0;
   let totalUsedMemory = 0;
-  let totalUsedCPUTime = 0;
+  let totalUsedWalltime = 0;
   let users = [];
   let usersJSON = [];
 
@@ -260,7 +242,7 @@ function setGroupModalData(group) {
         <td> ${u.jobs} </td>
         <td> ${u.req_mem} </td>
         <td> ${u.used_mem} </td>
-        <td> ${u.used_cput} </td>
+        <td> ${u.used_walltime} </td>
       </tr>
     `);
   });
@@ -269,7 +251,7 @@ function setGroupModalData(group) {
   newDataSet.forEach(job => {
     totalRequestedMemory += memToMB(job.r_mem);
     totalUsedMemory += memToMB(job.used_mem);
-    totalUsedCPUTime = addTimes(totalUsedCPUTime, job.used_cput);
+    totalUsedWalltime = addTimes(totalUsedWalltime, job.used_walltime);
   });
 
   downloadContents = {...usersJSON};
@@ -279,7 +261,7 @@ function setGroupModalData(group) {
   $('#groupStatsTotalJobs').html(totalJobs);
   $('#groupStatsReqMem').html(totalRequestedMemory + ' MB');
   $('#groupStatsUsedMem').html(totalUsedMemory + ' MB');
-  $('#groupStatsCPUTime').html(totalUsedCPUTime);
+  $('#groupStatsCPUTime').html(totalUsedWalltime);
 
   $('#groupStatsFrom').html($('#fromDate').val());
   $('#groupStatsTo').html($('#toDate').val());
@@ -290,7 +272,7 @@ function setGroupModalData(group) {
 // Utilities
 //Add two times together in the following format hh:mm:ss
 function addTimes (startTime, endTime) {
-  if (startTime != 0 && endTime != 0) {
+  if (startTime != 0 && endTime != 0 && typeof startTime !== 'undefined' && typeof endTime !== 'undefined') {
     let a = startTime.split(':');
     let b = endTime.split(':');
   

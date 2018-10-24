@@ -265,7 +265,7 @@ module.exports.getData = (req, res, next) => {
   SELECT
   user_jobs.insert_datetime, user_jobs.euser,
   tier1.job_state,
-  tier2.r_mem, tier2.used_mem, tier2.used_cput,
+  tier2.r_mem, tier2.used_mem, tier2.used_cput, tier2.r_walltime, tier2.used_walltime,
   tier3.egroup
   FROM user_jobs, tier1, tier2, tier3
   WHERE tier1.ID = user_jobs.ID AND tier2.ID = user_jobs.ID AND tier3.ID = user_jobs.ID
