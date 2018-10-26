@@ -150,7 +150,7 @@ app.post('/login', (req, res)=>{
 
 app.get('/login', (req, res)=>{
   // temporary for testing so that I don't have to log in every time.
-  // req.session.user = 'sopara';
+  // req.session.user = 'honlee';
   // req.session.authenticated = true;
   // res.redirect('/');
   res.render('login');

@@ -155,12 +155,12 @@ function getBlockedJobCallback(req, res, count, array) {
 module.exports.getJobsByUser = (req, res, next) => {
   //Prepare some default query and parameter.
   let params = [req.params.user];
-  let query =` SELECT * FROM user_jobs INNER JOIN tier1 ON user_jobs.ID = tier1.ID WHERE euser = ?`;
+  let query =` SELECT * FROM user_jobs, tier1 WHERE euser = ? AND user_jobs.ID = tier1.ID`;
 
   //Check if query status exists in the get request.
   //If it exists then add it to the query. And the value to the parameters (to prevent SQL injection)
   if (typeof req.query.fromdate !== 'undefined' && typeof req.query.todate !== 'undefined') {
-    query += " AND insert_datetime BETWEEN ? AND ?";
+    query += " AND insert_datetime >= ? AND insert_datetime <= ?";
     params.push(req.query.fromdate);
     params.push(req.query.todate);
   }
@@ -183,6 +183,7 @@ module.exports.getJobsByUser = (req, res, next) => {
   }else{
     query += " OFFSET 0";
   }
+
   //Execute query and once we have the
   executeQuery(req, res, query, params, next);
 }
@@ -192,10 +193,10 @@ module.exports.countJobsByUser = (req, res, next) => {
   console.log(`Counting jobs for user: ${req.params.user}`);
 
   let params = [req.params.user];
-  let query =`SELECT count(*) as count, job_state FROM user_jobs INNER JOIN tier1 ON user_jobs.ID = tier1.ID WHERE euser = ?`;
+  let query =`SELECT count(user_jobs.ID) as count, job_state FROM user_jobs INNER JOIN tier1 ON user_jobs.ID = tier1.ID WHERE euser = ?`;
 
   if (typeof req.query.fromdate !== 'undefined' && typeof req.query.todate !== 'undefined') {
-    query += " AND insert_datetime BETWEEN ? AND ?";
+    query += " AND insert_datetime >= ? AND insert_datetime <= ?";
     params.push(req.query.fromdate);
     params.push(req.query.todate);
   }
@@ -205,7 +206,7 @@ module.exports.countJobsByUser = (req, res, next) => {
     params.push(req.query.job_state);
   }
 
-  query += " GROUP BY job_state"
+  query += " GROUP BY job_state";
   query += " ORDER BY insert_datetime DESC";
 
   executeQuery(req, res, query, params, next);
@@ -291,7 +292,7 @@ module.exports.getData = (req, res, next) => {
 
   if (typeof req.query.jobstate !== 'undefined' && req.query.jobstate != '') {
     params.push(req.query.jobstate);
-    query += " AND tier1.job_state = ?"
+    query += " AND tier1.job_state = ?";
   }
 
   //query+= " LIMIT 100";

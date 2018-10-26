@@ -35,7 +35,8 @@ function getTabCounts() {
       }
 
       result.data.forEach((item)=>{
-        //Add pagination for every
+        //Add pagination for every, make sure job state is in lower case
+        item['job_state'] = item['job_state'].toLowerCase();
         let element = $(`#pagination-${item['job_state']}`);
         for (let i = 1; i <= (Math.ceil((item['count'] / $('#pageLimit').val()))); i++) {
           //One extra function at the onclick because of the pagination highlighting
@@ -236,7 +237,7 @@ function getJobs(offset, job_state) {
 function loadJobs(result, job_state) {
 
   var fullJobState = 'completed';
-  switch (job_state) {
+  switch (job_state.toLowerCase()) {
     case 'c':
       $('#completed .content').html('');
       fullJobState = 'completed'
@@ -269,7 +270,7 @@ function loadJobs(result, job_state) {
               <li class="list-group-item">exit status: ${element.exit_status}</li>
             </ul>
             <div class="card-body">
-              <a href="#" onClick="getInfo(${element.ID});" class="card-link">More Info</a>
+              <a href="#" onClick="getInfo('${element.ID}');" class="card-link">More Info</a>
             </div>
           </div>
         </div>
@@ -341,7 +342,7 @@ $(document).ready(()=>{
     //I added an attribute so we can get the job_state really easily from the clicked tab
     var job_state = this.attributes.job_state.nodeValue;
 
-    if (job_state == 'r' && running == false) {
+    if (job_state.toLowerCase() == 'r' && running == false) {
       running = true;
       getJobs(1, job_state);
     }else if (job_state == 'q' && queued == false) {
