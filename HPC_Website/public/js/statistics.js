@@ -33,7 +33,7 @@ function setFilterDefaults() {
   // Set defaults for the between dates filter to previous month to beginning of this month.
   var now = new Date();
   var lastMonth = `${now.getFullYear()}-${zeroPadded((now.getMonth()-1)%12+1)}-${zeroPadded(now.getDate())}`;
-  var nextMonth = `${now.getFullYear()}-${zeroPadded((now.getMonth()+1)%12+1)}-${zeroPadded(now.getDate())}`;
+  var nextMonth = `${now.getFullYear()}-${zeroPadded((now.getMonth())%12+1)}-${zeroPadded(now.getDate())}`;
 
   $('#fromDate').val(lastMonth);
   $('#toDate').val(nextMonth);
@@ -272,7 +272,11 @@ function setGroupModalData(group) {
 // Utilities
 //Add two times together in the following format hh:mm:ss
 function addTimes (startTime, endTime) {
-  if (startTime != 0 && endTime != 0 && typeof startTime !== 'undefined' && typeof endTime !== 'undefined') {
+  if (startTime != 0 && endTime != 0 && typeof startTime !== 'undefined' && typeof endTime !== 'undefined' && startTime >= 0 && endTime >= 0) {
+
+    if (isNaN(startTime)) startTime = '00:00:00';
+    if (isNaN(endTime)) endTime = '00:00:00';
+
     let a = startTime.split(':');
     let b = endTime.split(':');
   
