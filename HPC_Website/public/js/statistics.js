@@ -30,13 +30,13 @@ $(document).ready(()=>{
 //function to set all the filters to their default property
 function setFilterDefaults() {
   console.log("[setFilterDefaults] Run");
-  // Set defaults for the between dates filter to previous month to beginning of this month.
+  // Set defaults for the between dates filter to previous month and today.
   var now = new Date();
   var lastMonth = `${now.getFullYear()}-${zeroPadded((now.getMonth()-1)%12+1)}-${zeroPadded(now.getDate())}`;
-  var nextMonth = `${now.getFullYear()}-${zeroPadded((now.getMonth())%12+1)}-${zeroPadded(now.getDate())}`;
+  var today = `${now.getFullYear()}-${zeroPadded((now.getMonth())%12+1)}-${zeroPadded(now.getDate())}`;
 
   $('#fromDate').val(lastMonth);
-  $('#toDate').val(nextMonth);
+  $('#toDate').val(today);
 
   console.log("[setFilterDefaults] Finished");
 }
@@ -67,47 +67,47 @@ function setUpTable() {
 //Make array item for each user. Loop through all users and add their information to their.
 for (var i = 0; i < tempUsers.length; i++) {
   tempDataSet.push({euser: '', r_mem: 0, used_mem: 0, used_walltime: 0, egroup: '', score: 0});
-  dataSetObject.data.forEach(data => {
-    if (tempUsers[i] == data.euser) {
-      tempDataSet[i].euser = data.euser;
-      tempDataSet[i].r_mem += memToMB(data.r_mem);
-      tempDataSet[i].used_mem += memToMB(data.used_mem);
-      tempDataSet[i].used_walltime = addTimes(tempDataSet[i].used_walltime, data.used_walltime);
-      tempDataSet[i].egroup = data.egroup;
-    }
+    dataSetObject.data.forEach(data => {
+      if (tempUsers[i] == data.euser) {
+        tempDataSet[i].euser = data.euser;
+        tempDataSet[i].r_mem += memToMB(data.r_mem);
+        tempDataSet[i].used_mem += memToMB(data.used_mem);
+        tempDataSet[i].used_walltime = addTimes(tempDataSet[i].used_walltime, data.used_walltime);
+        tempDataSet[i].egroup = data.egroup;
+      }
+    });
+
+    downloadContents = dataSetObject.data;
+  }
+
+  tempDataSet.map((data) =>{ 
+    data.score = data.score + ' %';
+    data.euser = `<a href="#" onClick="setUserModalData('${data.euser}');return false;">${data.euser}</a>`;
+    data.egroup = `<a href="#" onClick="setGroupModalData('${data.egroup}');return false;">${data.egroup}</a>`;
+    data.used_walltime = getCPUseconds(data.used_walltime);
   });
 
-  downloadContents = dataSetObject.data;
-}
+  userTable = $('#myTable').DataTable( {
+    data: tempDataSet,
+    columnDefs: [
+      { type: 'time-uni', targets: 4 }
+    ],
+    columns: [
+      { data: 'egroup' },
+      { data: 'euser' },
+      { data: 'r_mem' },
+      { data: 'used_mem' },
+      { data: 'used_walltime' }
+    ]
+  });
 
-tempDataSet.map((data) =>{ 
-  data.score = data.score + ' %';
-  data.euser = `<a href="#" onClick="setUserModalData('${data.euser}');return false;">${data.euser}</a>`;
-  data.egroup = `<a href="#" onClick="setGroupModalData('${data.egroup}');return false;">${data.egroup}</a>`;
-  // data.used_walltime = getCPUseconds(data.used_walltime);
-});
+  $('#minRequested').keyup( function() {
+    userTable.draw();
+  });
 
-userTable = $('#myTable').DataTable( {
-  data: tempDataSet,
-  columnDefs: [
-    { type: 'time-uni', targets: 4 }
-  ],
-  columns: [
-    { data: 'egroup' },
-    { data: 'euser' },
-    { data: 'r_mem' },
-    { data: 'used_mem' },
-    { data: 'used_walltime' }
-  ]
-});
-
-$('#minRequested').keyup( function() {
-  userTable.draw();
-});
-
-$('#minScore').keyup( function() {
-  userTable.draw();
-});
+  $('#minScore').keyup( function() {
+    userTable.draw();
+  });
 
 }
 
@@ -268,7 +268,7 @@ function setGroupModalData(group) {
 
   $('#groupStats').modal('show');
 }
-    
+
 // Utilities
 //Add two times together in the following format hh:mm:ss
 function addTimes (startTime, endTime) {
