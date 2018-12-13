@@ -89,7 +89,6 @@ app.post('/jobs/blocked/count', user.isAuthenticated, (req, res)=>{
 });
 
 app.post('/getStats', user.isAdmin, (req, res) => {
-  console.log('stats called');
   const path = `http://${options.host}:${options.port}/stats?fromdate=${req.body.fromdate}&todate=${req.body.todate}&jobstate=${req.body.jobstate}`;
   request(path, { json: true }, (err, response, body) => {
     res.status(200).json(response.body);

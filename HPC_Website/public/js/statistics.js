@@ -1,208 +1,228 @@
-let dataSetObject;
-let downloadContents;
-let userTable = [];
-//variable for realtime 
+let data;
 
-$(document).ready(()=>{
+// index for the username is used as index to match with all other arrays
+let users = []; // ["john", "theo", "casper"]
+let r_mem = []; // [12000, 240000, 239302] requested memory in MB
+let u_mem = []; // used_memory in MB
+let u_wall = [];// walltime is in seconds
+let groups = [] // ["MRI", "TG", "MRI"]
+
+let table_data = [];
+
+let user_table;
+
+// To be able to download this data
+let group_data;
+let user_data;
+
+// initialize function to run when page is loaded
+$(document).ready(() => {
   $('#myTable').hide();
-  setFilterDefaults();
-  $.ajax({
-    type: "POST",  
-    url: `/getStats`,
-    data: {fromdate: $('#fromDate').val(), todate: $('#toDate').val(), jobstate: $('#jobState').val()}
-  }).done((data)=>{
-    console.log(`[loadStatsPromise] Data: ${data}`);
-    if (data.success && data.data.length != 0) {
-      dataSetObject = data;
-      console.log(`[loadStatsPromise] Success: Data found and stored`);
-      fadeLoaders();
-      setUpTable();
-    }else{
-      fadeLoaders();
-      console.log(`[loadStatsPromise] Warning: No data found. Refresh the page and try again`);
-      alert('No data was found with these filters. Refresh the page and try again');
-    }
-  }).fail((xhr)=>{
-    console.log(`[loadStatsPromise] Error: ${JSON.stringify(xhr)}`);
+  set_filters();
+  get_data(() => {
+    users = get_users(data);
+    format_data_to_arrays(data);
+  
+    console.log(table_data);
+
+    // Initialize DataTable
+    user_table = $('#myTable').DataTable( {
+      data: table_data,
+      columnDefs: [
+        {
+          "render": function (data, type, row) {
+            if (type === 'display') {
+              return data + ' MB';
+            }else{
+              return data;
+            }
+          },
+          "targets": [2, 3]
+        },
+        {
+          "render": function (data, type, row) {
+            if (type === 'display') {
+              return seconds_to_time(data);
+            }else{
+              return data;
+            }
+          },
+          "targets": 4
+        },
+        {
+          "render": function (data, type, row) {
+            if (type === 'display') {
+              return `<a href="#" onClick="set_user_modal_data('${data}');return false;">${data}</a>`;
+            }else{
+              return data;
+            }
+          },
+          "targets": 1
+        },
+        {
+          "render": function (data, type, row) {
+            if (type === 'display') {
+              return `<a href="#" onClick="set_group_modal_data('${data}');return false;">${data}</a>`;
+            }else{
+              return data;
+            }
+          },
+          "targets": 0
+        }
+      ],
+      columns: [
+        { title: 'Group' },
+        { title: 'User' },
+        { title: 'Requested Mem' },
+        { title: 'Used Mem' },
+        { title: 'Used Walltime (seconds)' }
+      ]
+    });
+
+    // special function to filter table realtime on requested memory
+    // function is registered at the bottom of this page
+    $('#minRequested').keyup( function() {
+      user_table.draw();
+    });
+
+    hide_loader();
+    $('#myTable').show();
+
   });
 });
 
-//function to set all the filters to their default property
-function setFilterDefaults() {
-  console.log("[setFilterDefaults] Run");
-  // Set defaults for the between dates filter to previous month and today.
-  var now = new Date();
-  var lastMonth = `${now.getFullYear()}-${zeroPadded((now.getMonth()-1)%12+1)}-${zeroPadded(now.getDate())}`;
-  var today = `${now.getFullYear()}-${zeroPadded((now.getMonth())%12+1)}-${zeroPadded(now.getDate())}`;
-
-  $('#fromDate').val(lastMonth);
-  $('#toDate').val(today);
-
-  console.log("[setFilterDefaults] Finished");
-}
-
-//Register an external filter. using an input. return true means this item can be showed in the table.
-$.fn.dataTable.ext.search.push(
-  function(settings, data, dataIndex) {
-    var min = parseInt( $('#minRequested').val(), 10 );
-    var requestedMem = parseFloat( data[2] ) || 0; // use data for the requested memory column
-
-    if (isNaN(min) || isNaN(requestedMem) || requestedMem > min) {
-      return true;
-    }else{
-      return false;
-    }
-  }
-);
-
-function setUpTable() {
-  let tempDataSet = [];
-  //Make temporary user array. Add users to it. Then remove the duplicated users
-  let tempUsers = [];    
-  dataSetObject.data.forEach(data => {
-    tempUsers.push(data.euser);
-  });
-  tempUsers = Array.from(new Set([ ...tempUsers ]));
-
-//Make array item for each user. Loop through all users and add their information to their.
-for (var i = 0; i < tempUsers.length; i++) {
-  tempDataSet.push({euser: '', r_mem: 0, used_mem: 0, used_walltime: 0, egroup: '', score: 0});
-    dataSetObject.data.forEach(data => {
-      if (tempUsers[i] == data.euser) {
-        tempDataSet[i].euser = data.euser;
-        tempDataSet[i].r_mem += memToMB(data.r_mem);
-        tempDataSet[i].used_mem += memToMB(data.used_mem);
-        tempDataSet[i].used_walltime = addTimes(tempDataSet[i].used_walltime, data.used_walltime);
-        tempDataSet[i].egroup = data.egroup;
-      }
-    });
-
-    downloadContents = dataSetObject.data;
-  }
-
-  tempDataSet.map((data) =>{ 
-    data.score = data.score + ' %';
-    data.euser = `<a href="#" onClick="setUserModalData('${data.euser}');return false;">${data.euser}</a>`;
-    data.egroup = `<a href="#" onClick="setGroupModalData('${data.egroup}');return false;">${data.egroup}</a>`;
-    data.used_walltime = getCPUseconds(data.used_walltime);
-  });
-
-  userTable = $('#myTable').DataTable( {
-    data: tempDataSet,
-    columnDefs: [
-      { type: 'time-uni', targets: 4 }
-    ],
-    columns: [
-      { data: 'egroup' },
-      { data: 'euser' },
-      { data: 'r_mem' },
-      { data: 'used_mem' },
-      { data: 'used_walltime' }
-    ]
-  });
-
-  $('#minRequested').keyup( function() {
-    userTable.draw();
-  });
-
-  $('#minScore').keyup( function() {
-    userTable.draw();
-  });
-
-}
-
-function changeData(newdata) {
-  let tempDataSet = [];
-  //Make temporary user array. Add users to it. Then remove the duplicated users
-  let tempUsers = [];    
-    newdata.data.forEach(data => {
-    tempUsers.push(data.euser);
-  });
-  tempUsers = Array.from(new Set([ ...tempUsers ]));
-
-  //Make array item for each user. Loop through all users and add their information to their.
-  for (var i = 0; i < tempUsers.length; i++) {
-    tempDataSet.push({euser: '', r_mem: 0, used_mem: 0, used_walltime: 0, egroup: ''});
-    newdata.data.forEach(data => {
-      if (tempUsers[i] == data.euser) {
-        tempDataSet[i].euser = data.euser;
-        tempDataSet[i].r_mem += memToMB(data.r_mem);
-        tempDataSet[i].used_mem += memToMB(data.used_mem);
-        tempDataSet[i].used_walltime = addTimes(tempDataSet[i].used_walltime, data.used_walltime);
-        tempDataSet[i].egroup = data.egroup;
-      }
-    });
-  }
-
-  tempDataSet.map((data) =>{ 
-    data.euser = `<a href="#" onClick="setUserModalData('${data.euser}');return false;">${data.euser}</a>`;
-    data.egroup = `<a href="#" onClick="setGroupModalData('${data.egroup}');return false;">${data.egroup}</a>`;
-    // data.used_walltime = getCPUseconds(data.used_walltime);
-  });
-
-  $('#myTable').dataTable().fnClearTable();
-  $('#myTable').dataTable().fnAddData(tempDataSet);
-
-  downloadContents = tempDataSet.data;
-}
-
-function applyFilters() {
-  $('#myTable').fadeOut(100);
-  $('#tableLoader').fadeIn(250);
-
+function get_data(callback) {
   $.ajax({
     type: "POST",  
     url: `/getStats`,
     data: {fromdate: $('#fromDate').val(), todate: $('#toDate').val(), jobstate: $('#jobState').val()}
-  }).done((data)=>{
-    if (data.success && data.data.length != 0) {
-      dataSetObject = data;
-      console.log(data);
-      console.log(`[applyFilters] Success: Data found and stored`);
-      changeData(dataSetObject);
-      fadeLoaders();
+  }).done((response)=>{
+    console.log(`[get_data] Data:`);
+    if (response.success) {
+      console.log(response.data);
+      data = response.data;
+      callback();
     }else{
-      console.log(`[applyFilters] Warning: No data found. Refresh the page and try again`);
-      alert('No data was found with these filters. Refresh the page and try again');
-      fadeLoaders();
+      console.log('success is false');
+      console.log(response.data);
     }
   }).fail((xhr)=>{
-    console.log(`[applyFilters] Error: ${xhr}`);
+    console.log(`[get_data] Error: ${JSON.stringify(xhr)}`);
   });
 }
 
-function getUserModalData(user) {
-  let name = user;
-  let jobs = 0;
-  let req_mem = 0;
-  let used_mem = 0;
-  let used_walltime = 0;
+// function executes all other functions to populate the arrays at the top
+function format_data_to_arrays(data) {
+  for (var i in users) {
+    r_mem.push(get_r_mem_from_user(users[i], data));
+    u_mem.push(get_u_mem_from_user(users[i], data));
+    u_wall.push(get_used_walltime_seconds_from_user(users[i], data));
+    groups.push(get_group_from_user(users[i], data));
+  }
 
-  let newDataSet = dataSetObject.data.filter(job => {
-    return job.euser == user;
-  });
+  for (var i in users) {
+    table_data.push( [ groups[i], users[i], r_mem[i], u_mem[i], u_wall[i] ] );
+  }
 
-  jobs = newDataSet.length;
-  newDataSet.forEach(job => {
-    req_mem += memToMB(job.r_mem);
-    used_mem += memToMB(job.used_mem);
-    used_walltime = addTimes(used_walltime, job.used_walltime);
-  });
-
-  downloadContents = newDataSet;
-
-  return {name, jobs, req_mem, used_mem, used_walltime};
 }
 
-function setUserModalData(user) {
-  let u = getUserModalData(user);
+function get_users(rows) {
+  let temp_user_array = [];
+  for (var i in rows) {
+    // only append if user is not yet in there
+    if (!temp_user_array.includes(rows[i].euser)) temp_user_array.push(rows[i].euser);
+  }
+  return temp_user_array;
+}
 
-  $('#userStatsLabel').html(u.name);
-  $('#userStatsUser').html(u.name);
-  $('#userStatsTotalJobs').html(u.jobs);
-  $('#userStatsReqMem').html(u.req_mem + ' MB');
-  $('#userStatsUsedMem').html(u.used_mem + ' MB');
-  $('#userStatsWalltime').html(u.used_walltime);
+function get_r_mem_from_user(user, rows) {
+  let memory = 0;
+  for (var i in rows) {
+    if (rows[i].euser == user) memory += mem_to_mb(rows[i].r_mem);
+  }
+  return memory;
+}
+
+function get_u_mem_from_user(user, rows) {
+  let memory = 0;
+  for (var i in rows) {
+    if (rows[i].euser == user) memory += mem_to_mb(rows[i].used_mem);
+  }
+  return memory;
+}
+
+function get_used_walltime_seconds_from_user(user, rows) {
+  let seconds = 0;
+  for (var i in rows) {
+    if (rows[i].euser == user) seconds += time_to_seconds(rows[i].used_walltime);
+  }
+  return seconds;
+}
+
+function get_group_from_user(user, rows) {
+  let group = 'no group';
+  for (var i in rows) {
+    if (rows[i].euser == user) group = rows[i].egroup;
+  }
+  return group;
+}
+
+
+// Helper functions that do small tasks
+function apply_filters() {
+  show_loader();
+  get_data(() => {
+    refresh_table();
+  });
+}
+
+function refresh_table() {
+  $('#myTable').dataTable().fnClearTable();
+
+  if (data.length <= 0) {
+    alert('no data found.');
+    hide_loader();
+  }else{
+    table_data = [];
+    users = get_users(data);
+    format_data_to_arrays(data);
+    $('#myTable').dataTable().fnAddData(table_data);
+    hide_loader();
+  }
+}
+
+function get_modal_data_from_user(user) {
+  let total_jobs = 0;
+  let requested_memory = 0;
+  let used_memory = 0;
+  let used_walltime = '00:00:00';
+
+  for (var i in users) {
+    if (users[i] == user) {
+      requested_memory = get_r_mem_from_user(users[i], data);
+      used_memory = get_u_mem_from_user(users[i], data);
+      used_walltime = get_used_walltime_seconds_from_user(users[i], data);
+    }
+  }
+
+  // count jobs
+  for (var i in data) {
+    if (data[i].euser == user) total_jobs += 1;
+  }
+
+  return {user, total_jobs, requested_memory, used_memory, used_walltime};
+}
+
+function set_user_modal_data(user) {
+  let u = get_modal_data_from_user(user);
+  set_user_data(user);
+
+  $('#userStatsLabel').html(u.user);
+  $('#userStatsUser').html(u.user);
+  $('#userStatsTotalJobs').html(u.total_jobs);
+  $('#userStatsReqMem').html(u.requested_memory + ' MB');
+  $('#userStatsUsedMem').html(u.used_memory + ' MB');
+  $('#userStatsWalltime').html(seconds_to_time(u.used_walltime));
 
   $('#userStatsFrom').html($('#fromDate').val());
   $('#userStatsTo').html($('#toDate').val());
@@ -211,57 +231,50 @@ function setUserModalData(user) {
   $('#userStats').modal('show');
 }
 
-function setGroupModalData(group) {
-  let totalJobs = 0;
-  let totalRequestedMemory = 0;
-  let totalUsedMemory = 0;
-  let totalUsedWalltime = 0;
-  let users = [];
-  let usersJSON = [];
+function set_group_modal_data(group) {
+  let group_total_jobs = 0;
+  let group_requested_memory = 0;
+  let group_used_memory = 0;
+  let group_used_walltime = 0;
 
-  let newDataSet = dataSetObject.data.filter(job => {
-    //push all users into users array. (this will get lots of duplicates but we'll fix em afterwards)
-    return job.egroup == group;
-  });
+  set_group_data(group);
 
-  newDataSet.forEach(job => {
-    users.push(job.euser);
-  });
+  // put index of the user in the array so we can use it later to get the information
+  let group_users = [];
+  for (var i in users) {
+    if (groups[i] == group) group_users.push(users[i]);
+  }
 
-  //remove all duplicated users
-  users = Array.from(new Set([ ...users ]));
-
-  //usersFromGroup
+  // loop through all users and generate the html
+  // also count all the data of that user towards the group total
   $('#usersFromGroup').html('');
-  users.forEach(user => {
-    let u = getUserModalData(user);
-    usersJSON.push(u);
+  for (var i in group_users) {
+    let user_data = get_modal_data_from_user(group_users[i]);
+
+    // count the data from the user towards the group total
+    group_total_jobs += user_data.total_jobs;
+    group_requested_memory += user_data.requested_memory;
+    group_used_memory += user_data.used_memory;
+    group_used_walltime += user_data.used_walltime;
+
+    // append html table row with info of the user
     $('#usersFromGroup').append(`
-      <tr>
-        <td><a href="#" onClick="setUserModalData('${u.name}'); return false;">${u.name}</a></td>
-        <td> ${u.jobs} </td>
-        <td> ${u.req_mem} </td>
-        <td> ${u.used_mem} </td>
-        <td> ${u.used_walltime} </td>
-      </tr>
-    `);
-  });
-
-  totalJobs = newDataSet.length;
-  newDataSet.forEach(job => {
-    totalRequestedMemory += memToMB(job.r_mem);
-    totalUsedMemory += memToMB(job.used_mem);
-    totalUsedWalltime = addTimes(totalUsedWalltime, job.used_walltime);
-  });
-
-  downloadContents = {...usersJSON};
+    <tr>
+      <td><a href="#" onClick="set_user_modal_data('${user_data.user}'); return false;">${user_data.user}</a></td>
+      <td> ${user_data.total_jobs} </td>
+      <td> ${user_data.requested_memory} MB</td>
+      <td> ${user_data.used_memory} MB</td>
+      <td> ${seconds_to_time(user_data.used_walltime)} </td>
+    </tr>
+  `);
+  }
 
   $('#groupStatsLabel').html(group);
   $('#groupStatsGroup').html(group);
-  $('#groupStatsTotalJobs').html(totalJobs);
-  $('#groupStatsReqMem').html(totalRequestedMemory + ' MB');
-  $('#groupStatsUsedMem').html(totalUsedMemory + ' MB');
-  $('#groupStatsCPUTime').html(totalUsedWalltime);
+  $('#groupStatsTotalJobs').html(group_total_jobs);
+  $('#groupStatsReqMem').html(group_requested_memory + ' MB');
+  $('#groupStatsUsedMem').html(group_used_memory + ' MB');
+  $('#groupStatsCPUTime').html(seconds_to_time(group_used_walltime));
 
   $('#groupStatsFrom').html($('#fromDate').val());
   $('#groupStatsTo').html($('#toDate').val());
@@ -269,47 +282,50 @@ function setGroupModalData(group) {
   $('#groupStats').modal('show');
 }
 
-// Utilities
-//Add two times together in the following format hh:mm:ss
-function addTimes (startTime, endTime) {
-  if (startTime != 0 && endTime != 0 && typeof startTime !== 'undefined' && typeof endTime !== 'undefined' && startTime >= 0 && endTime >= 0) {
+function set_filters() {
+  console.log("[set_filters] setting filters");
+  // Set defaults for the between dates filter to previous month and today.
+  var now = new Date();
+  var lastMonth = `${now.getFullYear()}-${zero_padded((now.getMonth()-1)%12+1)}-${zero_padded(now.getDate())}`;
+  var today = `${now.getFullYear()}-${zero_padded((now.getMonth())%12+1)}-${zero_padded(now.getDate() + 1)}`;
 
-    if (isNaN(startTime)) startTime = '00:00:00';
-    if (isNaN(endTime)) endTime = '00:00:00';
+  $('#fromDate').val(lastMonth);
+  $('#toDate').val(today);
 
-    let a = startTime.split(':');
-    let b = endTime.split(':');
-  
-    let aSeconds = (+a[0]) * 60 * 60 + (+a[1]) * 60 + (+a[2]);
-    let bSeconds = (+b[0]) * 60 * 60 + (+b[1]) * 60 + (+b[2]);
-  
-    let totalSeconds = aSeconds + bSeconds;
-  
-    return formatCPUseconds(totalSeconds);
-  }else{
-    if (startTime != 0) {
-      return startTime;
-    }else if (endTime != 0) {
-      return endTime;
-    }else{
-      return '00:00:00';
+  console.log("[set_filters] done settings filters");
+}
+
+function seconds_to_time(seconds) {
+  if (typeof seconds == "number" && seconds > 0) {
+    hours = Math.floor(seconds / 3600);
+    seconds %= 3600;
+    minutes = Math.floor(seconds / 60);
+    seconds = seconds % 60;
+
+    return `${zero_padded(hours)}:${zero_padded(minutes)}:${zero_padded(seconds)}`;
+  }
+  return "00:00:00";
+}
+
+function time_to_seconds(hhmmss) {
+  if (typeof hhmmss == "string" && hhmmss.split(':').length == 3) {
+    try {
+      let temp = hhmmss.split(':');
+      let seconds = (+temp[0]) * 60 * 60 + (+temp[1]) * 60 + (+temp[2]);
+
+      if (isNaN(seconds)) return 0;
+
+      return seconds;
+    } catch (error) {
+      console.log('Error occured while converting time to seconds.');
+      console.log(error);
+      return 0;
     }
   }
+  return 0;
 }
 
-//Remove extra 0's from date
-function zeroPadded(val) {
-  return val >= 10 ? val : '0' + val;
-}
-
-//fadeOut the loading circles
-function fadeLoaders() {
-  $('#tableLoader').fadeOut(250);
-  $('#myTable').fadeIn(400);
-}
-
-//Convert any memory notation to MB
-function memToMB (mem) {
+function mem_to_mb(mem) {
   var regex = /([0-9]*)([a-zA-Z]{1,2})/g;
   var found = regex.exec(mem);
 
@@ -339,81 +355,118 @@ function memToMB (mem) {
   }
 }
 
-//get CPU time in seconds
-function getCPUseconds(cput) {
-  let temp = cput.split(':');
-  let seconds = (+temp[0]) * 60 * 60 + (+temp[1]) * 60 + (+temp[2]);
-  return seconds;
+// add 0 infront of number if smaller than 10
+function zero_padded(val) {
+  return val >= 10 ? val : '0' + val;
 }
 
-function formatCPUseconds(totalSeconds) { 
-  hours = Math.floor(totalSeconds / 3600);
-  totalSeconds %= 3600;
-  minutes = Math.floor(totalSeconds / 60);
-  seconds = totalSeconds % 60;
-
-  return `${zeroPadded(hours)}:${zeroPadded(minutes)}:${zeroPadded(seconds)}`;
+//fadeOut the loading circles
+function hide_loader() {
+  $('#tableLoader').fadeOut(250);
+  $('#myTable').fadeIn(400);
 }
 
-Object.size = function(obj) {
-  var size = 0, key;
-  for (key in obj) {
-      if (obj.hasOwnProperty(key)) size++;
-  }
-  return size;
-};
+function show_loader() {
+  $('#myTable').hide();
+  $('#tableLoader').show();
+}
 
-function downloadCSV(obj) {
+function export_data_to_csv(type) {
+
   let csv = '';
-  let headers = [];
+  let data = '';
+  let headers = 'Group,User,Requested memory,Used memory,Used walltime,\n';
+  let isValidType = true;
 
-  Object.keys(obj).forEach(value => {
-    Object.keys(obj[value]).forEach(key => {
-      headers.push(key);
-    });
-  });
+  switch (type) {
+    case 'all':
+      data = table_data;
+      console.log('all');
+      headers = 'Group,User,Requested memory (MB),Used memory (MB),Used walltime (Seconds),\n';
+      break;
+    case 'user':
+      data = user_data;
+      break;
+    case 'group':
+      data = group_data;
+      break;
+    default:
+      console.log('unspecified type');
+      isValidType = false;
+      break;
+  }
 
-  //clear duplicates
-  headers = Array.from(new Set([ ...headers ]));
+  if (isValidType) {
+    console.log('[Export data to csv] data:');
+    console.log(data);
 
-  for (var i = 0; i < headers.length; i++) {
-    if (i == headers.length - 1) {
-      csv += `${headers[i]}\n`;
-    }else{      
-      csv += `${headers[i]},`;
+    csv += headers;
+
+    for (let i in data) {
+      for (let j in data[i]) {
+        csv += data[i][j] + ','
+      }
+      csv += '\n';
+    }
+    
+    console.log('Done exporting, Starting download');
+
+    let blob = new Blob([csv], {type: 'text/csv'});
+    if(window.navigator.msSaveOrOpenBlob) {
+        window.navigator.msSaveBlob(blob, 'export.csv');
+    }
+    else{
+        let elem = window.document.createElement('a');
+        elem.href = window.URL.createObjectURL(blob);
+        elem.download = 'export.csv';        
+        document.body.appendChild(elem);
+        elem.click();        
+        document.body.removeChild(elem);
     }
   }
 
-  //transform obj to CSV then start a download.
-  let str = '';
-  for (var i in obj) {
-    for (var j in obj[i]) {
-      str += obj[i][j] + ',';
+}
+
+function set_user_data(user) {
+  user_data = [];
+  for (var i in data) {
+    if (data[i].euser == user) user_data.push([data[i].egroup, data[i].euser, data[i].r_mem, data[i].used_mem, data[i].used_walltime]);
+  }
+}
+
+function set_group_data(group) {
+  group_data = [];
+  for (var i in data) {
+    if (data[i].egroup == group) group_data.push([data[i].egroup, data[i].euser, data[i].r_mem, data[i].used_mem, data[i].used_walltime]);
+  }
+}
+
+// function tests. write down functions to test if other functions work correctly
+
+function test_time_to_seconds() {
+
+  var inputs = ["", 0, 200, "test", "11:00", ":::", "NaN:NaN:NaN", "13:00:00", "99:88:77", "16:25:32"];
+  var results = [];
+  
+  for (var i in inputs) {
+    results.push( time_to_seconds(inputs[i]) > 0 );
+  }
+  
+  // expected outcome = false, false, false, false, false, false, false, true, true, true
+  return results;
+}
+
+// DataTable register special functions
+//Register an external filter. using an input. return true means this item can be showed in the table.
+$.fn.dataTable.ext.search.push(
+  function(settings, data, dataIndex) {
+    var min = parseInt( $('#minRequested').val(), 10 );
+    var requestedMem = parseFloat( data[2] ) || 0; // use data for the requested memory column
+
+    if (isNaN(min) || isNaN(requestedMem) || requestedMem > min) {
+      return true;
+    }else{
+      return false;
     }
-    str = str.replace(/,\s*$/, "");
-    csv += str + '\n';
-    str = '';
   }
-
-  let blob = new Blob([csv], {type: 'text/csv'});
-  if(window.navigator.msSaveOrOpenBlob) {
-      window.navigator.msSaveBlob(blob, 'export.csv');
-  }
-  else{
-      let elem = window.document.createElement('a');
-      elem.href = window.URL.createObjectURL(blob);
-      elem.download = 'export.csv';        
-      document.body.appendChild(elem);
-      elem.click();        
-      document.body.removeChild(elem);
-  }
-
-}
-
-function exportCSV() {
-  downloadCSV(downloadContents);
-}
-
-function exportAllCSV() {
-  downloadCSV(dataSetObject.data);
-}
+);
