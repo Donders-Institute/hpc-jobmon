@@ -1,5 +1,11 @@
 # HPC-Jobmon API Endpoints
 
+The API runs on port 3000.
+Send a GET request to the following URL:
+http://localhost:3000/user/ramrob/jobs?fromdate=2018-10-01&todate=2018-11-01
+
+ramrob is the DCCN username of the user. localhost should be the ip address of the API.
+
 ### GET /user/:user/jobs
 
 Get all jobs from a user.
@@ -32,7 +38,7 @@ Response:
 
 success is false if something went wrong.
 
-Parameters can be given such as:
+Parameters can be given in the query such as:
 
 - ?fromdate=2018-10-01&todate=2018-11-01
 - ?job_state=r (valid job states are q, c, r)
