@@ -5,3 +5,4 @@ HPC_Website/controllers/adconfig.json
 HPC_Website/controllers/ldapscert.crt
 docker-compose.yml
 docker-compose.dccn.yml
+node_modules

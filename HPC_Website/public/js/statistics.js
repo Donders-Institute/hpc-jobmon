@@ -105,6 +105,8 @@ function get_data(callback) {
     }else{
       console.log('success is false');
       console.log(response.data);
+      hide_loader();
+      alert('something went wrong. if this issue persists please let the administrator know');
     }
   }).fail((xhr)=>{
     console.log(`[get_data] Error: ${JSON.stringify(xhr)}`);
@@ -178,6 +180,12 @@ function apply_filters() {
 
 function refresh_table() {
   $('#myTable').dataTable().fnClearTable();
+
+  users = [];
+  r_mem = [];
+  u_mem = [];
+  u_wall = [];
+  groups = [];
 
   if (data.length <= 0) {
     alert('no data found.');
@@ -286,11 +294,14 @@ function set_filters() {
   console.log("[set_filters] setting filters");
   // Set defaults for the between dates filter to previous month and today.
   var now = new Date();
-  var lastMonth = `${now.getFullYear()}-${zero_padded((now.getMonth()-1)%12+1)}-${zero_padded(now.getDate())}`;
-  var today = `${now.getFullYear()}-${zero_padded((now.getMonth())%12+1)}-${zero_padded(now.getDate() + 1)}`;
+  var last = new Date();
+  last.setDate(0);
 
-  $('#fromDate').val(lastMonth);
-  $('#toDate').val(today);
+  console.log(formatDate(last));
+  console.log(formatDate(now));
+
+  $('#fromDate').val(formatDate(last));
+  $('#toDate').val(formatDate(now));
 
   console.log("[set_filters] done settings filters");
 }
@@ -439,6 +450,21 @@ function set_group_data(group) {
   for (var i in data) {
     if (data[i].egroup == group) group_data.push([data[i].egroup, data[i].euser, data[i].r_mem, data[i].used_mem, data[i].used_walltime]);
   }
+}
+
+function formatDate(date) {
+  var monthNames = [
+    "01", "02", "03",
+    "04", "05", "06", "07",
+    "08", "09", "10",
+    "11", "12"
+  ];
+
+  var day = date.getDate();
+  var monthIndex = date.getMonth();
+  var year = date.getFullYear();
+
+  return year + '-' + monthNames[monthIndex] + '-' + day;
 }
 
 // function tests. write down functions to test if other functions work correctly

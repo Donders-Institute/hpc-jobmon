@@ -52,46 +52,76 @@ app.post('/count', user.isAuthenticated, (req, res)=>{
   //Use the request.js to make the reset and retrieve the code
   request(path, { json: true }, (err, response, body) => {
     //Send back the status code and the result in json.
-    res.status(200).json(response.body);
+    if (body) {
+      res.status(200).json(response.body);
+    }else{
+      res.status(200).json({success: false});
+    }
   });
 
 });
 app.post('/jobs', user.isAuthenticated, (req, res)=>{
   const path = `http://${options.host}:${options.port}/users/${req.session.user}/jobs?fromdate=${req.body.fromDate}&todate=${req.body.toDate}&limit=${req.body.limit}&offset=${req.body.offset}&job_state=${req.body.job_state}`;
   request(path, { json: true }, (err, response, body) => {
-    res.status(200).json(response.body);
+    if (body) {
+      res.status(200).json(response.body);
+    }else{
+      res.status(200).json({success: false});
+    }
   });
 });
 app.post('/jobinfo', user.isAuthenticated, (req, res)=>{
   console.log('job info');
   const path = `http://${options.host}:${options.port}/jobs/${req.body.jobid}`;
   request(path, { json: true }, (err, response, body) => {
-    res.status(200).json(response.body);
+    if (body) {
+      res.status(200).json(response.body);
+    }else{
+      res.status(200).json({success: false});
+    }
   });
 });
 app.post('/jobinfo/extra', user.isAuthenticated, (req, res)=>{
   const path = `http://${options.host}:${options.port}/jobs/${req.body.jobid}/extra`;
   request(path, { json: true }, (err, response, body) => {
-    res.status(200).json(response.body);
+    if (body) {
+      res.status(200).json(response.body);
+    }else{
+      res.status(200).json({success: false});
+    }
   });
 });
 app.post('/jobs/blocked', user.isAuthenticated, (req, res)=>{
   const path = `http://${options.host}:${options.port}/users/${req.session.user}/jobs/blocked`;
   request(path, { json: true }, (err, response, body) => {
-    res.status(200).json(response.body);
+    if (body) {
+      res.status(200).json(response.body);
+    }else{
+      res.status(200).json({success: false});
+    }
   });
 });
 app.post('/jobs/blocked/count', user.isAuthenticated, (req, res)=>{
   const path = `http://${options.host}:${options.port}/users/${req.session.user}/jobs/blocked/count`;
   request(path, { json: true }, (err, response, body) => {
-    res.status(200).json(response.body);
+    if (body) {
+      res.status(200).json(response.body);
+    }else{
+      res.status(200).json({success: false});
+    }
   });
 });
 
 app.post('/getStats', user.isAdmin, (req, res) => {
   const path = `http://${options.host}:${options.port}/stats?fromdate=${req.body.fromdate}&todate=${req.body.todate}&jobstate=${req.body.jobstate}`;
   request(path, { json: true }, (err, response, body) => {
-    res.status(200).json(response.body);
+
+    if (body) {
+      res.status(200).json(response.body);
+    }else{
+      res.status(200).json({success: false});
+    }
+
   });
 });
 
@@ -147,7 +177,7 @@ app.post('/login', (req, res)=>{
 
 app.get('/login', (req, res)=>{
   // temporary for testing so that I don't have to log in every time.
-  // req.session.user = 'honlee';
+  // req.session.user = 'sopara';
   // req.session.authenticated = true;
   // res.redirect('/');
   res.render('login');
