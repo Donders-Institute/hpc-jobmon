@@ -175,30 +175,30 @@ Otherwise you will get ALL data. Make sure date is in database format (YYYY-MM-D
 
 response:
 
-{
-  "success": true,
-  "data": [
-    {
-      "insert_datetime": "2019-01-23T09:30:03.000Z",
-      "euser": "nilmul",
-      "job_state": "r",
-      "r_mem": "16gb",
-      "used_mem": "146364kb",
-      "used_cput": "00:17:30",
-      "r_walltime": "71:00:00",
-      "used_walltime": "00:22:32",
-      "egroup": "memory"
-    },
-    {
-      "insert_datetime": "2019-01-22T10:01:36.000Z",
-      "euser": "jacbel",
-      "job_state": "C",
-      "r_mem": "16gb",
-      "used_mem": "13338332kb",
-      "used_cput": "29862",
-      "r_walltime": "",
-      "used_walltime": "71:35:10",
-      "egroup": "memspa"
-    }
-  ]
-}
+        {
+          "success": true,
+          "data": [
+            {
+              "insert_datetime": "2019-01-23T09:30:03.000Z",
+              "euser": "nilmul",
+              "job_state": "r",
+              "r_mem": "16gb",
+              "used_mem": "146364kb",
+              "used_cput": "00:17:30",
+              "r_walltime": "71:00:00",
+              "used_walltime": "00:22:32",
+              "egroup": "memory"
+            },
+            {
+              "insert_datetime": "2019-01-22T10:01:36.000Z",
+              "euser": "jacbel",
+              "job_state": "C",
+              "r_mem": "16gb",
+              "used_mem": "13338332kb",
+              "used_cput": "29862",
+              "r_walltime": "",
+              "used_walltime": "71:35:10",
+              "egroup": "memspa"
+            }
+          ]
+        }
