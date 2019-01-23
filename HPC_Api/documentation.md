@@ -2,11 +2,12 @@
 
 The API runs on port 3000.
 Send a GET request to the following URL:
-http://localhost:3000/user/ramrob/jobs?fromdate=2018-10-01&todate=2018-11-01
+
+http://localhost:3000/users/ramrob/jobs?fromdate=2018-10-01&todate=2018-11-01
 
 ramrob is the DCCN username of the user. localhost should be the ip address of the API.
 
-### GET /user/:user/jobs
+### GET /users/:user/jobs
 
 Get all jobs from a user.
 
@@ -48,7 +49,7 @@ Parameters can be given in the query such as:
 The first 2 parameters work for most endpoints where you would need them. The last two only work for this request.
 
 
-### GET /user/:user/jobs/count
+### GET /users/:user/jobs/count
 
 Count all jobs ans group them by job_state.
 
@@ -73,7 +74,7 @@ Response:
     }
 
 
-### GET /user/:user/jobs/blocked
+### GET /users/:user/jobs/blocked
 
 Get all blocked jobs from a user.
 
@@ -91,7 +92,7 @@ Get all blocked jobs from a user.
       ]
     }
 
-### GET /user/:user/jobs/blocked/count
+### GET /users/:user/jobs/blocked/count
 
 Count all the blocked jobs of a user.
 
@@ -160,3 +161,44 @@ Get some extra job information from a job_id
         }
       ]
     }
+
+    
+### GET /stats
+
+localhost:3000/stats?fromdate=2019-01-22&todate=2019-01-24
+
+use fromdate and todate as query parameters.
+Otherwise you will get ALL data. Make sure date is in database format (YYYY-MM-DD).
+
+?fromdate=2019-01-20
+?todate=2019-01-25
+
+response:
+
+{
+  "success": true,
+  "data": [
+    {
+      "insert_datetime": "2019-01-23T09:30:03.000Z",
+      "euser": "nilmul",
+      "job_state": "r",
+      "r_mem": "16gb",
+      "used_mem": "146364kb",
+      "used_cput": "00:17:30",
+      "r_walltime": "71:00:00",
+      "used_walltime": "00:22:32",
+      "egroup": "memory"
+    },
+    {
+      "insert_datetime": "2019-01-22T10:01:36.000Z",
+      "euser": "jacbel",
+      "job_state": "C",
+      "r_mem": "16gb",
+      "used_mem": "13338332kb",
+      "used_cput": "29862",
+      "r_walltime": "",
+      "used_walltime": "71:35:10",
+      "egroup": "memspa"
+    }
+  ]
+}
